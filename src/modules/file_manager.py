@@ -3,7 +3,7 @@
 from pathlib import Path
 import shutil as sh
 import json
-from os import name, system
+from os import name
 from modules import definer as df
 
 def realocate_files(
@@ -139,8 +139,6 @@ def realocate_files(
     sep = '/' if name != 'nt' else '\\'
 
     try:
-        system("cls" if name == "nt" else "clear")
-
         arquivos = [f for f in entrada.rglob("*") if f.is_file() and not_in_backup_folder(f)]
         arquivos_a_mudar = {}
 

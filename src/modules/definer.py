@@ -31,18 +31,30 @@ def _normalize_extensions_input(exts: Union[str, Iterable]) -> List[str]:
 
     return [str(exts)]
 
-def escrever_extensoes(extensoes: dict[str, list[str]], overwrite: bool = False) -> bool:
+def ler_extensoes():
     base_dir = Path(__file__).parent
     json_path = base_dir / "data" / "extensions.json"
 
     json_path.parent.mkdir(parents=True, exist_ok=True)
 
+    with json_path.open("r", encoding="utf-8-sig") as f:
+        data = json.load(f)
+
+    return data
+
+def escrever_extensoes(extensoes: dict[str, list[str]], overwrite: bool = False) -> bool:
+    base_dir = Path(__file__).parent
+    json_path = base_dir / "data" / "extensions.json"
+
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    
     try:
         try:
-            with json_path.open("r", encoding="utf-8-sig") as f:
-                data = json.load(f)
-                if not isinstance(data, dict):
-                    data = {}
+            data = ler_extensoes()
+
+            if not isinstance(data, dict):
+                data = {}
+        
         except (FileNotFoundError, json.JSONDecodeError):
             data = {}
 
