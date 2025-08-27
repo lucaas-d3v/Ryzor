@@ -4,18 +4,18 @@ from pathlib import Path
 import shutil as sh
 import json
 from os import name, system
-                            
-def realocate_files(entrada: Path, saida: Path, backup: bool = False, preview: bool = False, verbose: bool = False) -> bool:
+
+def realocate_files(entrada: Path, saida: Path, backup: bool = False, no_preview: bool = False, verbose: bool = False) -> bool:
     """ Função principal, papel: fazer backup/organizar os arquivo
     Função principal do Ryzor
-    
+
     args:
         entrada: caminho de entrada dos arquivos a serem organizados/backup.
         saida: caminho de saída onde os arquivos seram levados ao fim do processo.
         backup: informa será feito o backup pu apenas organização.
         preview: informa se o usuário quer o preview de tudo antes da ação.
         verbose: informa será o usuário quer ssber literalmente tudo, caminhos completos e demais.
-    
+
     returns:
         retorna False caso o caminho seja um caminho ou n exista, etc, ou True caso tudo ocorra como esperado.
     """
@@ -24,14 +24,14 @@ def realocate_files(entrada: Path, saida: Path, backup: bool = False, preview: b
         """
         Medida de segurança caso o diretório informado não exista.
         """
-        
+
         return False
 
     if not entrada.is_dir():
         """
         Medida de segurança caso o caminho especificado não seja um diretório.
         """
-        
+
         return False
 
     if not saida.exists():
@@ -45,27 +45,27 @@ def realocate_files(entrada: Path, saida: Path, backup: bool = False, preview: b
         """
         Medida de segurança, caso a saida não seja um diretório.
         """
-        
+
         return False
 
     def continuar() -> bool:
         """
         Para evitar chamadas duplicadas, criei continuar() para perguntar ao usuário se quer confirmar a ação.
         """
-        
+
         aproveds = ["s", "yes", "sim", "ok"]
         c = input("Deseja continuar? (s/n): ").lower().trim()
-        
+
         return c in aproveds
 
     def execute(mudancas: dict[str, str]):
         """
         Criei execute() para evitar repetição de código.
-        
+
         args:
             mudancas: um dicionário com chave str, e valor str,
                       basicamente, o caminho onde o arquivo está, é onde ele deve ser levado.
-        
+
         returns:
             retorna True caso as mudanças ocoram como esperadas.
         """
@@ -121,7 +121,7 @@ def realocate_files(entrada: Path, saida: Path, backup: bool = False, preview: b
         Criei not_in_backup_folder(), para verificar se a pasta é de backup,
         assim, evitando fazer backup, de uma pasta de bakcup
         """
-        
+
         return "backup" not in [p.lower() for p in arquivo.parts[:-1]]
 
     sep = '/' if name != 'nt' else '\\'
@@ -176,7 +176,7 @@ def realocate_files(entrada: Path, saida: Path, backup: bool = False, preview: b
             destino = pasta_destino / arquivo.name
 
             if backup:
-                if preview:
+                if not not_preview:
                     if verbose:
                         print(f"[Ryzor] {arquivo} -> {destino}")
                     else:
@@ -185,7 +185,7 @@ def realocate_files(entrada: Path, saida: Path, backup: bool = False, preview: b
                 arquivos_a_mudar[str(arquivo)] = str(destino)
 
             else:
-                if preview:
+                if not not_preview:
                     if verbose:
                         print(f"[Ryzor] {arquivo} -> {destino}")
                     else:
