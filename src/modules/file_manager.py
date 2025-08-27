@@ -4,8 +4,16 @@ from pathlib import Path
 import shutil as sh
 import json
 from os import name, system
+from modules import definer as df
 
-def realocate_files(entrada: Path, saida: Path, backup: bool = False, no_preview: bool = False, verbose: bool = False) -> bool:
+def realocate_files(
+        entrada: Path, saida: Path,
+        backup: bool = False,
+        no_preview: bool = False,
+        verbose: bool = False,
+        y: bool = False
+    ) -> bool:
+    
     """ Função principal, papel: fazer backup/organizar os arquivo
     Função principal do Ryzor
 
@@ -13,9 +21,10 @@ def realocate_files(entrada: Path, saida: Path, backup: bool = False, no_preview
         entrada: caminho de entrada dos arquivos a serem organizados/backup.
         saida: caminho de saída onde os arquivos seram levados ao fim do processo.
         backup: informa será feito o backup pu apenas organização.
-        preview: informa se o usuário quer o preview de tudo antes da ação.
+        no_preview: informa se o usuário quer desativar o preview de tudo antes da ação.
         verbose: informa será o usuário quer ssber literalmente tudo, caminhos completos e demais.
-
+        y: pré-responde sim para a ação escolhida.
+        
     returns:
         retorna False caso o caminho seja um caminho ou n exista, etc, ou True caso tudo ocorra como esperado.
     """
@@ -53,8 +62,11 @@ def realocate_files(entrada: Path, saida: Path, backup: bool = False, no_preview
         Para evitar chamadas duplicadas, criei continuar() para perguntar ao usuário se quer confirmar a ação.
         """
 
-        aproveds = ["s", "yes", "sim", "ok"]
-        c = input("Deseja continuar? (s/n): ").lower().trim()
+        if y:
+            return True
+
+        aproveds = ["y", "s", "yes", "sim", "ok"]
+        c = input("Deseja continuar? (s/n): ").lower().strip()
 
         return c in aproveds
 
@@ -133,11 +145,7 @@ def realocate_files(entrada: Path, saida: Path, backup: bool = False, no_preview
         arquivos_a_mudar = {}
 
         try:
-            base_dir = Path(__file__).parent
-            json_path = base_dir / "extensions.json"
-
-            with json_path.open("r", encoding="utf-8-sig") as f:
-                tipos_de_arquivos = json.load(f)
+            tipos_de_arquivos = df.ler_extensoes()
 
         except (FileNotFoundError, json.JSONDecodeError) as e:
             print(f"[Ryzor] Erro ao carregar JSON: {e}")
@@ -176,7 +184,7 @@ def realocate_files(entrada: Path, saida: Path, backup: bool = False, no_preview
             destino = pasta_destino / arquivo.name
 
             if backup:
-                if not not_preview:
+                if not no_preview:
                     if verbose:
                         print(f"[Ryzor] {arquivo} -> {destino}")
                     else:
@@ -185,7 +193,7 @@ def realocate_files(entrada: Path, saida: Path, backup: bool = False, no_preview
                 arquivos_a_mudar[str(arquivo)] = str(destino)
 
             else:
-                if not not_preview:
+                if not no_preview:
                     if verbose:
                         print(f"[Ryzor] {arquivo} -> {destino}")
                     else:
