@@ -1,0 +1,38 @@
+# ---- Ambientes virtuais ----
+.venv/
+venv/
+env/
+ENV/
+
+# ---- Cache do Python ----
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# ---- Build e distribuição ----
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ---- IDEs/Editor ----
+.vscode/
+.idea/
+*.iml
+ativar.sh
+
+# ---- Logs ----
+*.log
+
+# ---- Arquivos temporários ----
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ---- Testes ----
+/Ryzor/tests/arquivos/
+.pytest_cache/
+.coverage
+htmlcov/

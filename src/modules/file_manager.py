@@ -6,6 +6,19 @@ import json
 from os import name
 from modules import definer as df
 
+def continuar(y: bool = False) -> bool:
+        """
+        Para evitar chamadas duplicadas, criei continuar() para perguntar ao usuário se quer confirmar a ação.
+        """
+
+        if y:
+            return True
+
+        aproveds = ["y", "s", "yes", "sim", "ok"]
+        c = input("Deseja continuar? (s/n): ").lower().strip()
+
+        return c in aproveds
+
 def realocate_files(
         entrada: Path, saida: Path,
         backup: bool = False,
@@ -57,18 +70,7 @@ def realocate_files(
 
         return False
 
-    def continuar() -> bool:
-        """
-        Para evitar chamadas duplicadas, criei continuar() para perguntar ao usuário se quer confirmar a ação.
-        """
-
-        if y:
-            return True
-
-        aproveds = ["y", "s", "yes", "sim", "ok"]
-        c = input("Deseja continuar? (s/n): ").lower().strip()
-
-        return c in aproveds
+    
 
     def execute(mudancas: dict[str, str]):
         """
@@ -201,7 +203,7 @@ def realocate_files(
                 arquivos_a_mudar[str(arquivo)] = str(destino)
 
         else:
-            if continuar():
+            if continuar(y):
                 return execute(arquivos_a_mudar)
 
 

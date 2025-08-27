@@ -1,4 +1,8 @@
+"""Arquivo responsável por gerenciar o comando 'list' """
+
 from pathlib import Path
+from modules import definer
+from pprint import pprint
 
 def mostrar(conteudo: list[Path], verbose: bool = False):
     for content in conteudo:
@@ -23,3 +27,6 @@ def lister(caminho: Path, recursive_mode: bool = False, verbose: bool = False):
         conteudo = list(caminho.iterdir())
 
     mostrar(conteudo, verbose)    
+
+def lister_extensions():
+    pprint(definer.ler_extensoes())

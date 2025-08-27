@@ -1,3 +1,5 @@
+"""Arquivo responsável por geranciar o comando 'define' """
+
 import json
 from pathlib import Path
 from typing import Iterable, List, Union
@@ -31,7 +33,17 @@ def _normalize_extensions_input(exts: Union[str, Iterable]) -> List[str]:
 
     return [str(exts)]
 
-def ler_extensoes():
+def salvar_extensoes(data: dict[str, list[str]]):
+    base_dir = Path(__file__).parent
+    json_path = base_dir / "data" / "extensions.json"
+
+    json_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    with json_path.open("w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+    
+
+def ler_extensoes() -> dict[str, list[str]]:
     base_dir = Path(__file__).parent
     json_path = base_dir / "data" / "extensions.json"
 
@@ -119,6 +131,6 @@ def definer(type_arg: Union[str, Iterable[str]], extensions_suported: Union[str,
             data_to_add[t] = list(exts)
 
     if escrever_extensoes(data_to_add, overwrite):
-        print(f"[Ryzor] extensões `{data_to_add}` adicionadas com sucesso")
+        print(f"[Ryzor] extensões {data_to_add} adicionadas com sucesso")
     else:
         print("[Ryzor] Falha ao salvar extensões")
