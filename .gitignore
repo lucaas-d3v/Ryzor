@@ -5,7 +5,7 @@ env/
 ENV/
 
 # ---- Cache do Python ----
-__pycache__/
+Ryzor/src/modules/__pycache__
 *.pyc
 *.pyo
 *.pyd
