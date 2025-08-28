@@ -2,6 +2,7 @@ import argparse as ap
 from pathlib import Path
 from modules import (file_manager, definer, lister, remover)
 import pyfiglet
+from logger import log
 
 padrao = Path(".")
 
@@ -39,7 +40,7 @@ args = parser.parse_args()
 match args.comando:
     case "version":
         ascii_banner = pyfiglet.figlet_format("Ryzor")
-        print(f"{ascii_banner}\n\nBy: Lucas Paulino\nVersion: 0.1.0")
+        log(f"[primary]{ascii_banner}[/]\n[secondary]By: Lucas Paulino\nVersion: 0.1.1[/]", code=0)
 
     case "organize":
         file_manager.realocate_files(args.path, args.destination, backup=False, no_preview=args.no_preview, verbose=args.verbose, y=args.yes)

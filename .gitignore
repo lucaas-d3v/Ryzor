@@ -3,9 +3,13 @@
 venv/
 env/
 ENV/
+Ryzor
+tests/arquivos
 
 # ---- Cache do Python ----
-Ryzor/src/modules/__pycache__
+
+*/__pycache__
+/home/lucas2078/Ryzor/src/modules/__pycache__
 *.pyc
 *.pyo
 *.pyd
