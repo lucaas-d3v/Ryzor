@@ -37,6 +37,21 @@ keys = ["normal", # 1
 
 console = Console(theme=ryzor_theme)
 
+def help_log(mensagem: str):
+    msg = mensagem.split(" ")
+    
+    _msg = "[primary][Ryzor][/] [warning]"
+
+    for palavra in msg:
+        if palavra == "->":
+            _msg += f"[primary]{palavra}[/] [normal 2]"
+        else:
+            _msg += f"{palavra} "
+    else:
+        _msg += "[/][/]"
+
+    log(_msg, code=0)
+
 def log(mensagem: str, debug: bool = False, code: int = 1, end: str = "\n") -> None:
     """
     args:
