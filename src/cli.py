@@ -1,8 +1,7 @@
 import argparse as ap
 from pathlib import Path
 from modules import (file_manager, definer, lister, remover)
-import pyfiglet
-from logger import log, help_log
+from logger import log, help_log, version, show_help
 
 padrao = Path(".")
 
@@ -19,9 +18,10 @@ parent.add_argument("--extensions", "-exts", nargs="+", help=help_log("```--exte
 
 # parser principal
 parser = ap.ArgumentParser(description="Ryzor")
-subparsers = parser.add_subparsers(dest="comando", help=log("\n[primary][Ryzor][/] [normal 2]---Comandos disponíveis---[/]\n", code=0))
+subparsers = parser.add_subparsers(dest="comando", help=help_log("\n[primary][Ryzor][/] [normal 2]---Comandos disponíveis---[/]\n"))
 
 # subparsers recebem o parent (herdam os flags)
+parser_help = subparsers.add_parser("help", parents=[parent])
 parser_organize = subparsers.add_parser("organize", parents=[parent], help=help_log("```ryzor organize -p <pasta de origem> -d <pasta de destino>``` -> Apenas organiza os arquivos do caminho passado."))
 parser_backup = subparsers.add_parser("backup", parents=[parent], help=help_log("```ryzor backup -p <pasta de origem> -d <pasta de destino>``` -> Faz o backup e organiza os arquivos do caminho passado."))
 parser_list = subparsers.add_parser("list", parents=[parent], help=help_log("```ryzor list``` -> Lista arquivos.\n\t```ryzor list -e_exts``` -> Lista tipos de arquivos e extensões suportadas por cada um.\n"))
@@ -29,7 +29,6 @@ parser_define = subparsers.add_parser("define", parents=[parent], help=help_log(
 parser_edit = subparsers.add_parser("remove", parents=[parent], help=help_log("```ryzor remove -t <tipo de arquivos>``` -> Remove o tipo de arquivos todo.\n\t```ryzor remove -t <tipo de arquivos> -exts <extensões ou '.' para todas>``` -> Remove todas as extensões do tipo passado...\n"))
 parser_version = subparsers.add_parser("version", help=help_log("```ryzor version``` -> Informa a versão atual do Ryzor."))
 parser_repair = subparsers.add_parser("repair", help=help_log("```ryzor repair``` -> Restaura o Ryzor para versão de fábrica."))
-#parser_as = subparsers.add_parser("as", help=help_log("```r```informa como algo sera salvo"))
 
 parser_list.add_argument("--exists_extensions", "-e_exts", action="store_true", help=help_log("```-e_exts (extensões existentes)``` -> Define que os tipos de arquivos/ extensões suportadas serão listadas"))
 parser_define.add_argument("--overwrite", "-ow", action="store_true", help=help_log("```-ow``` -> Sobrescreve um tipo/extensão já existente\n"))
@@ -40,8 +39,7 @@ args = parser.parse_args()
 # dispatch
 match args.comando:
     case "version":
-        ascii_banner = pyfiglet.figlet_format("Ryzor")
-        log(f"[primary]{ascii_banner}[/]\n[accent]By: Lucas Paulino\nVersion: 0.1.1[/]", code=0)
+        version()
 
     case "organize":
         file_manager.realocate_files(args.path, args.destination, backup=False, no_preview=args.no_preview, verbose=args.verbose, y=args.yes)
@@ -61,5 +59,8 @@ match args.comando:
     case "remove":
         remover.remover_extensoes(type=args.type, extensions=args.extensions, no_preview=args.no_preview, y=args.yes)
 
+    case "help":
+        show_help()
+
     case _:
-        parser.print_help()
+        show_help()
