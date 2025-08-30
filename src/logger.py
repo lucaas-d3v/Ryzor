@@ -11,7 +11,7 @@ from rich.align import Align
 from rich.progress import SpinnerColumn, BarColumn
 from pathlib import Path
 import time
-from modules import file_manager as fm
+from modules.utils import execute
 import pyfiglet
 import sys
 import select
@@ -179,6 +179,15 @@ def log_mudancas(mudancas: dict[str, str], sep: str, backup: bool, verbose: bool
     console.print(mudancas_table, justify="center")
     console.print()
 
+def log_error(mensagem, repair: bool = False):
+    inicio = "[warning][Debug][/]"
+
+    mensagem = f"{inicio} [error]{mensagem}[/]"
+
+    if repair:
+        mensagem += ", tente `ryzor repair`."
+
+    console.print(mensagem)    
 
 
 def log(mensagem: str, debug: bool = False, code: int = 1, end: str = "\n") -> None:
@@ -189,7 +198,8 @@ def log(mensagem: str, debug: bool = False, code: int = 1, end: str = "\n") -> N
         code: codigo referente ao tipo de mensage, escrita
     """
     
-    inicio = "[warning][Debug][/]" if debug else "[primary][Ryzor][/]"
+    inicio = "[warning][Debug][/]" if (debug or code == 9) else "[primary][Ryzor][/]"
+
     mensagem = f"{inicio} [{keys[code - 1]}]{mensagem}[/]" if code != 0 else mensagem
     
     console.print(f"{mensagem}", end=end, justify="center")    
@@ -240,7 +250,7 @@ def barra_progresso(mudancas: dict[str, str], backup=True):
 
             try:
                 # Chamada para execute com o callback
-                sucesso = fm.execute(mudancas, callback=atualizar, backup=backup)
+                sucesso = execute(mudancas, callback=atualizar, backup=backup)
 
                 if sucesso:
                     log("Operação concluída com sucesso!", code=11)

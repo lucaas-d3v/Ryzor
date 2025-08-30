@@ -4,11 +4,34 @@ from pathlib import Path
 import shutil as sh
 import json
 import os
-from modules import definer as df
-from logger import log, log_mudancas
-from logger import barra_carregamento_com_callback    
 
-def continuar(y: bool = False) -> bool:
+try:
+    from logger import log, log_mudancas, log_error
+    from logger import barra_carregamento_com_callback    
+
+except (ModuleNotFoundError, ImportError):
+    from rich.console import Console
+
+    console = Console()
+
+    console.print("[#e43e5a bold][Debug] Erro: O módulo logger não encontrado nos arquivos do ryzor, tente `ryzor repair`[/]")
+    console.print("[#e43e5a bold][Debug] Cancelando...")
+    quit()
+
+try:
+    from modules import definer as df
+
+except (ModuleNotFoundError, ImportError):
+    log_error("Erro: O módulo 'definer' não encontrado nos arquivos do ryzor", True)
+    log_error("Cancelando...")
+
+    quit()
+
+def continuar(
+            mensagem: str = "Deseja continuar? (s/n):",
+            y: bool = False
+        ) -> bool:
+    
     """
     Para evitar chamadas duplicadas, criei continuar() para perguntar ao usuário se quer confirmar a ação.
     """
@@ -16,54 +39,85 @@ def continuar(y: bool = False) -> bool:
     if y:
         return True
 
-    aproveds = ["y", "s", "yes", "sim", "ok"]
-    
-    log("Deseja continuar? (s/n): ", code=10, end="")
-    c = input().lower().strip()
+    aproveds = [
+        # Português
+        "sim", "s", "ss", "claro", "beleza", "ok", "vai", "simbora"
 
-    return c in aproveds
+        # Inglês
+        "yes", "y", "yeah", "yep", "ok", "sure", "yup",
+
+        # Espanhol
+        "sí", "si", "s", "claro", "vale", "ok",
+
+        # Francês
+        "oui", "ouais", "ok", "d’accord",
+
+        # Alemão
+        "ja", "j", "ok", "klar",
+
+        # Italiano
+        "sì", "si", "ok", "certo", "va bene",
+
+        # Russo
+        "да", "da", "ок", "конечно",
+
+        # Japonês
+        "はい", "hai", "うん", "ok",
+
+        # Coreano
+        "네", "예", "ㅇㅇ", "ok",
+
+        # Árabe
+        "نعم", "naʿam", "ايه", "ok",
+    ]
+    
+    while True:
+        print(mensagem, end="")
+        
+        try:
+            c = input().lower().strip()
+            break
+
+        except ValueError:
+            log_error("A resposta não pode ser um número.")
+            continue
+
+    return busca_binaria(aproveds, c)
+
+def busca_binaria(lista: list[str], item: str):
+    """Função de busca binária para encontrar um item em uma lista ordenada."""
+
+    lista.sort()
+
+    inicio = 0
+    fim = len(lista) - 1
+
+    while inicio < fim:
+        meio = (fim + inicio) // 2    
+
+        if lista[meio] == item:
+            return True
+        
+        if lista[meio] > item:
+            fim = meio - 1
+            continue
+
+        if lista[meio] < item:
+            inicio = meio + 1
+            continue
+
+    return False 
 
 sep = os.sep  # pega separador do sistema
 
-def execute(mudancas: dict[str, str], callback=None, backup:bool = False, verbose:bool =False):
-    """
-    Executa copiar/mover arquivos de acordo com o dicionário mudancas.
-    """
+def rename(file: Path, qtd: list[int] = [0]) -> Path:
+    stem = file.stem            # nome do arquivo sem extensão
+    extensao = "".join(file.suffixes)  # todas as extensões juntas (ex: ".tar.gz")
 
-    try:
-        total = len(mudancas)
-            
-        for i, (arquivo, destino) in enumerate(mudancas.items(), start=1):
-            _arquivo = Path(arquivo)
-            _destino = Path(destino)
+    ultimo = max(qtd)
+    new_name = f"{stem} ({ultimo + 1}){extensao}"
 
-            if _arquivo.resolve() == _destino.resolve():
-                continue
-
-            # Criar diretório de destino se não existir
-
-            # Executa ação real
-            if backup:
-                _destino.parent.mkdir(parents=True, exist_ok=True)
-                sh.copy2(_arquivo, _destino)
-            else:
-                _destino.parent.mkdir(parents=True, exist_ok=True)
-                sh.move(_arquivo, _destino)
-
-            # CRÍTICO: Chamar callback APÓS a operação
-            if callback:
-                callback(
-                    atual=i,
-                    total=total,
-                    nome_arquivo=_destino.name,
-                    acao="Copiando" if backup else "Movendo"
-                )
-
-        return True
-
-    except Exception as e:
-        print(f"[DEBUG] Erro em execute: {e}")
-        return False
+    return file.with_name(new_name)
 
 def realocate_files(
         entrada: Path, saida: Path,
@@ -73,8 +127,8 @@ def realocate_files(
         y: bool = False
     ) -> bool | None:
     
-    """ Função principal, papel: fazer backup/organizar os arquivo
-    Função principal do Ryzor
+    """ 
+    Função principal, papel: fazer backup/organizar os arquivo
 
     args:
         entrada: caminho de entrada dos arquivos a serem organizados/backup.
@@ -92,32 +146,53 @@ def realocate_files(
         """
         Medida de segurança caso o diretório informado não exista.
         """
+        log_error("O caminho de entrada não existe.")
+        log_error("Cancelando")
+
         return False
 
     if not entrada.is_dir():
         """
         Medida de segurança caso o caminho especificado não seja um diretório.
         """
+        log_error("O caminho informado não pode ser um arquivo.")
+
         return False
 
     if not saida.exists():
         """
         Medida de segurança caso a saida não exista.
         """
-        saida.mkdir(parents=True, exist_ok=True)
 
+        log("O caminho de saida não existe.", code=9, debug=True)
+        log("Tentando Criar...", debug=True, code=10)
+        
+        try:
+
+            saida.mkdir(parents=True, exist_ok=True)
+            log("Caminho de saída criado com sucesso.", code=11)
+            log("Continuando...", code=11)
+
+        except PermissionError:
+            log_error(f"Erro, o Ryzor não tem permissão para atuar em {saida}")
+            return False
+        
     if not saida.is_dir():
         """
         Medida de segurança, caso a saida não seja um diretório.
-        """
+        """        
+        log_error("O caminho informado não pode ser um arquivo.")
+
         return False
 
     def not_in_backup_folder(arquivo: Path) -> bool:
         return "backup" not in [p.lower() for p in arquivo.parts[:-1]]
     
     def buscar_arquivos_generator():
-        '''Generator que faz a busca real dos arquivos'''
+        """Generator que faz a busca real dos arquivos"""
+        
         contador = 0
+
         for arquivo in entrada.rglob("*"):
             if arquivo.is_file() and not_in_backup_folder(arquivo):
                 contador += 1
@@ -127,22 +202,28 @@ def realocate_files(
     arquivos = barra_carregamento_com_callback(buscar_arquivos_generator, sep, verbose)
     
     if arquivos is None:
-        exit()
+        log_error("Não existem arquivos no caminho informado.")
+        
+        return False
 
     try:
         arquivos_a_mudar = {}
-
+        log("Carregando extensões...", code=10)
+        
         try:
             tipos_de_arquivos = df.ler_extensoes()
-
+            log("Extensões carregadas com sucesso.", code=11)
+        
         except (FileNotFoundError, json.JSONDecodeError) as e:
-            log(f"Erro ao carregar JSON: {e}", code=9)
-            return False
+            log_error(f"Erro ao carregar as extensões: {e}", True)
 
-        if not isinstance(tipos_de_arquivos, dict):
-            log("JSON não é um dicionário válido", code=9)
             return False
+        
+        if not isinstance(tipos_de_arquivos, dict):
+            log_error("As extensões não são um dicionário válido", True)
  
+            return False
+        
         for arquivo in arquivos:
             pasta_destino = Path(saida / arquivo.suffix[1:])
 
@@ -150,23 +231,34 @@ def realocate_files(
                 if any(arquivo.suffix.lower().endswith(ext) for ext in extensoes):
                     pasta_destino = Path(saida / tipo)
                     break
+
             else:
                 pasta_destino = Path(f"{saida}/Sem_Extensões")
 
             destino = pasta_destino / arquivo.name
 
             arquivos_a_mudar[str(arquivo)] = str(destino)
+        
         log_mudancas(arquivos_a_mudar, sep, verbose=verbose, backup=backup)
 
-        # CORREÇÃO 5: Mover else para fora do for loop
-        if continuar(y):
-            from logger import barra_progresso
+        
+        if continuar(y=y):
+            try:
+                from logger import barra_progresso
+
+            except (ModuleNotFoundError, ImportError):
+                log_error("Erro: O módulo logger não encontrado nos arquivos do ryzor",True)
+                log_error("Cancelando...")
+
+                return False
+
             barra_progresso(arquivos_a_mudar, backup=backup)
             return True
+        
         else:
             log("Cancelando...", code=10)
             return False
 
-    except Exception as e:
-        log(f"Erro: {e}", code=9)
+    except PermissionError:
+        log(f"Erro: O Ryzor não tem permissão para atuar em {saida}", debug=True, code=9)
         return False

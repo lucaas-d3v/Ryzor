@@ -1,7 +1,31 @@
 import argparse as ap
 from pathlib import Path
-from modules import (file_manager, definer, lister, remover)
-from logger import log, help_log, version, show_help
+
+try:
+    from logger import log, help_log, version, show_help
+
+except (ModuleNotFoundError, ImportError) as e:
+    from rich.console import Console
+
+    console = Console()
+
+    print(e)
+    quit()
+
+    console.print("[#e43e5a bold][Debug] Erro: O módulo logger não encontrado nos arquivos do ryzor, tente `ryzor repair`[/]")
+    console.print("[#e43e5a bold][Debug] Cancelando...")
+
+try:
+    from modules import (file_manager, definer, lister, remover)
+
+except (ModuleNotFoundError, ImportError):
+    from rich.console import Console
+
+    console = Console()
+
+    console.print("[#e43e5a bold][Debug] Erro: O módulos não encontrados nos arquivos do ryzor, tente `ryzor repair`[/]", justify="center")
+    console.print("[#e43e5a bold][Debug] Cancelando...")
+    quit()
 
 padrao = Path(".")
 
@@ -61,6 +85,10 @@ match args.comando:
 
     case "help":
         show_help()
+
+    case "repair":
+        log("repair ainda em desenvolvimento.", debug=True, code=10)
+        quit()
 
     case _:
         show_help()
