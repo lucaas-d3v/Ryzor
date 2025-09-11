@@ -27,86 +27,15 @@ except (ModuleNotFoundError, ImportError):
 
     quit()
 
-def continuar(
-            mensagem: str = "Deseja continuar? (s/n):",
-            y: bool = False
-        ) -> bool:
-    
-    """
-    Para evitar chamadas duplicadas, criei continuar() para perguntar ao usuário se quer confirmar a ação.
-    """
+try:
+    from utils import continuar
 
-    if y:
-        return True
+except (ModuleNotFoundError, ImportError):
+    log_error("Erro: O módulo 'utils' não encontrado nos arquivos do ryzor", True)
+    log_error("Cancelando...")
 
-    aproveds = [
-        # Português
-        "sim", "s", "ss", "claro", "beleza", "ok", "vai", "simbora"
+    quit()
 
-        # Inglês
-        "yes", "y", "yeah", "yep", "ok", "sure", "yup",
-
-        # Espanhol
-        "sí", "si", "s", "claro", "vale", "ok",
-
-        # Francês
-        "oui", "ouais", "ok", "d’accord",
-
-        # Alemão
-        "ja", "j", "ok", "klar",
-
-        # Italiano
-        "sì", "si", "ok", "certo", "va bene",
-
-        # Russo
-        "да", "da", "ок", "конечно",
-
-        # Japonês
-        "はい", "hai", "うん", "ok",
-
-        # Coreano
-        "네", "예", "ㅇㅇ", "ok",
-
-        # Árabe
-        "نعم", "naʿam", "ايه", "ok",
-    ]
-    
-    while True:
-        print(mensagem, end="")
-        
-        try:
-            c = input().lower().strip()
-            break
-
-        except ValueError:
-            log_error("A resposta não pode ser um número.")
-            continue
-
-    return busca_binaria(aproveds, c)
-
-def busca_binaria(lista: list[str], item: str):
-    """Função de busca binária para encontrar um item em uma lista ordenada."""
-
-    lista.sort()
-
-    inicio = 0
-    fim = len(lista) - 1
-
-    while inicio < fim:
-        meio = (fim + inicio) // 2    
-
-        if lista[meio] == item:
-            return True
-        
-        if lista[meio] > item:
-            fim = meio - 1
-            continue
-
-        if lista[meio] < item:
-            inicio = meio + 1
-            continue
-
-    return False 
 
 sep = os.sep  # pega separador do sistema
 
@@ -226,10 +155,13 @@ def realocate_files(
         
         for arquivo in arquivos:
             pasta_destino = Path(saida / arquivo.suffix[1:])
-
+        
             for tipo, extensoes in tipos_de_arquivos.items():
-                if any(arquivo.suffix.lower().endswith(ext) for ext in extensoes):
-                    pasta_destino = Path(saida / tipo)
+                extensoes_do_arquivo: list = arquivo.suffixes
+                
+                # Verifica se há interseção entre as extensões
+                if any(ext in extensoes for ext in extensoes_do_arquivo):
+                    pasta_destino = Path((saida / "backup" / tipo) if backup else (saida / tipo))
                     break
 
             else:

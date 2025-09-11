@@ -1,4 +1,4 @@
-![Logo do Ryzor](assets/ryzor_banner.png)
+![Logo do Ryzor](assets/Ryzor_Banner.png)
 
 # Ryzor
 

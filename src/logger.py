@@ -78,7 +78,7 @@ def version():
     )
 
     version_table.add_row("[#00ffff]By: Lucas Paulino[/]")
-    version_table.add_row("[#00ffff]Version: 0.1.5[/]")
+    version_table.add_row("[#00ffff]Version: 0.1.7[/]")
 
     console.print(version_table, justify="center")
     console.print()
@@ -108,6 +108,7 @@ def show_help():
         box=box.SQUARE,        # experimente box.SIMPLE, box.SQUARE ou box.SIMPLE_HEAVY
         padding=(0,1),
     )
+    
     comandos.add_column("Comando", style="#00ffff bold", no_wrap=True, justify="left")
     comandos.add_column("Uso", style="#EEAD2D bold", justify="left")
     comandos.add_column("Descrição", style="#00804b bold", justify="left")
@@ -131,7 +132,7 @@ def help_log(mensagem: str) -> str:
     """
     msg = mensagem.split(" ")
     
-    _msg = "[primary][Ryzor][/] [warning]"
+    _msg = "[primary][Help][/] [warning]"
 
     for palavra in msg:
         if palavra == "->":
@@ -172,14 +173,12 @@ def log_mudancas(mudancas: dict[str, str], sep: str, backup: bool, verbose: bool
         destino = resumo_pasta(destino, sep, verbose)
         
 
-        mudancas_table.add_row(origem,
-                                destino,
-                                f"{'Arquivo' if tipo.is_file() else 'Diretório' if tipo.is_dir() else 'Não específicado'}")
+        mudancas_table.add_row(origem, destino, f"{'Arquivo' if tipo.is_file() else 'Diretório' if tipo.is_dir() else 'Não específicado'}")
 
     console.print(mudancas_table, justify="center")
     console.print()
 
-def log_error(mensagem, repair: bool = False):
+def log_error(mensagem, repair: bool = False, cancel: bool = True):
     inicio = "[warning][Debug][/]"
 
     mensagem = f"{inicio} [error]{mensagem}[/]"
@@ -188,6 +187,9 @@ def log_error(mensagem, repair: bool = False):
         mensagem += ", tente `ryzor repair`."
 
     console.print(mensagem)    
+    
+    if cancel:
+        console.print(f"{inicio} [error]Cancelando...[/]")
 
 
 def log(mensagem: str, debug: bool = False, code: int = 1, end: str = "\n") -> None:
@@ -199,7 +201,6 @@ def log(mensagem: str, debug: bool = False, code: int = 1, end: str = "\n") -> N
     """
     
     inicio = "[warning][Debug][/]" if (debug or code == 9) else "[primary][Ryzor][/]"
-
     mensagem = f"{inicio} [{keys[code - 1]}]{mensagem}[/]" if code != 0 else mensagem
     
     console.print(f"{mensagem}", end=end, justify="center")    
@@ -208,6 +209,7 @@ def barra_progresso(mudancas: dict[str, str], backup=True):
     """
     Cria barra de progresso Rich centralizada e executa arquivos via callback.
     """
+
     if not mudancas:
         log("Nenhum arquivo para processar", code=10)
         return False
@@ -252,11 +254,13 @@ def barra_progresso(mudancas: dict[str, str], backup=True):
                 # Chamada para execute com o callback
                 sucesso = execute(mudancas, callback=atualizar, backup=backup)
 
-                if sucesso:
+                if sucesso[0]:
                     log("Operação concluída com sucesso!", code=11)
                 else:
-                    log("Operação falhou!", code=9)
 
+                    log_error(f"Erro em execute: {sucesso[1]}")
+                    log_error("Cancelando...")
+            
             except KeyboardInterrupt:
                 # garante parada limpa se Ctrl+C
                 progress.stop()
