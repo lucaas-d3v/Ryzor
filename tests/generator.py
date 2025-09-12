@@ -1,7 +1,7 @@
 """Arquivo para geração de arquivos para teste rápido"""
 
 import random as r                                      
-import os as s
+import os as s  
 
 tipos_de_arquivos = [
     '.fx', '.ffx', '.rar', '.targz', '.mcpack', '.mcaddon', '.mcworld', '.py', '.cs', '.zip',
@@ -12,7 +12,7 @@ tipos_de_arquivos = [
 
 s.makedirs("/home/lucas2078/Ryzor/tests/arquivos", exist_ok=True)
 
-for i in range(1, 200):
+for i in range(1, 10):
     with open(f"tests/arquivos/arquivo_{i}{r.choice(tipos_de_arquivos)}", "w") as w:
         w.write(" ")
 

@@ -1,37 +1,82 @@
 import argparse as ap
 from pathlib import Path
-from modules import (file_manager, definer, lister, remover)
-import pyfiglet
-from logger import log
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+try:
+    from rich.console import Console
+    console = Console()
+
+except (ModuleNotFoundError, ImportError) as e:
+        print("[Ryzor] Parece que o rich não está instalado em seu sistema, tente `ryzor repair`")
+        quit()
+        
+try:
+    from src.modules.logger import Logger
+
+except (ModuleNotFoundError, ImportError) as e:
+    print(e)
+
+    console.print("[#e43e5a bold][Debug] Erro: Cli O módulo logger não encontrado nos arquivos do ryzor, tente `ryzor repair`[/]")
+    console.print("[#e43e5a bold][Debug] Cancelando...")
+    quit()
+
+
+from src.modules.remover import Remover
+from src.modules.definer import Definer
+from src.modules.file_manager import FileManager
+from src.modules.lister import Lister
+    
+
+#except (ModuleNotFoundError, ImportError) as e:
+#    print(e)
+#    console.print("[#e43e5a bold][Debug] Erro: CLi O módules não encontrados nos arquivos do ryzor, tente `ryzor repair`[/]", justify="center")
+#    console.print("[#e43e5a bold][Debug] Cancelando...")
+#    quit()
 
 padrao = Path(".")
 
+logger = Logger()
+remover = Remover()
+file_manager = FileManager()
+definer = Definer()
+lister = Lister()
+
 # parser pai com flags "globais"
 parent = ap.ArgumentParser(add_help=False)
-parent.add_argument("--verbose", "-v", action="store_true", help="[Ryzor] Modo Verboso")
-parent.add_argument("--no_preview", "-n_pv", action="store_true", help="[Ryzor] Mostra o preview das mudanças")
-parent.add_argument("--yes", "-y", action="store_true", help="[Ryzor] Pré-responde sim para continuar a ação escolhida.")
-parent.add_argument("--recursive", "-r", action="store_true", help="[Ryzor] Ativa o modo de recursão")
-parent.add_argument("--path", "-p", nargs="?", default=padrao, type=Path, help="[Ryzor] Caminho dos arquivos")
-parent.add_argument("--destination", "-d", nargs="?", default=padrao, type=Path, help="[Ryzor] Caminho de destino")
-parent.add_argument("--type", "-t", type=str, help="[Ryzor] Define o tipo de arquivo")
-parent.add_argument("--extensions", "-exts", nargs="+", help="[Ryzor] Define as extensões que o tipo suporta")
+parent.add_argument("--verbose", "-v", action="store_true", help=logger.help_log("```--verbose``` ou ```-v``` -> Modo Verboso."))
+parent.add_argument("--no_preview", "-n_pv", action="store_true", help=logger.help_log("``--no_preview```` ou ```-n_pv``` -> desativa o preview antes das mudanças."))
+parent.add_argument("--yes", "-y", action="store_true", help=logger.help_log("```--yes``` ou ```-y``` -> Pré-responde sim para continuar a ação escolhida."))
+parent.add_argument("--recursive", "-r", action="store_true", help=logger.help_log("```--recursive``` ou ```-r``` -> Ativa o modo de recursão."))
+parent.add_argument("--path", "-p", nargs="?", default=padrao, type=Path, help=logger.help_log("```--path``` ou ```-p``` -> Caminho dos arquivos."))
+parent.add_argument("--destination", "-d", nargs="?", default=padrao, type=Path, help=logger.help_log("```--destination``` ou ```-d``` -> Caminho de destino."))
+parent.add_argument("--type", "-t", type=str, help=logger.help_log("```-type``` ou ```-t``` -> Define o tipo de arquivo."))
+parent.add_argument("--extensions", "-exts", nargs="+", help=logger.help_log("```--extensions``` ou ```-exts``` -> Define as extensões que o tipo suporta."))
+
+parent_remove = ap.ArgumentParser(add_help=False)
+
+parent_remove.add_argument("--directory", "-dir", type=str, default=padrao, help=logger.help_log("```--directory <diretório> ``` or ```-dir <diretório>``` -> Diretório a ser apagado."))
+parent_remove.add_argument("--folder", "-fdr", type=str, default=padrao.resolve(), help=logger.help_log("```--folder <pasta> ``` or ```-fdr <pasta>``` -> Pasta a ser apagada."))
+parent_remove.add_argument("--file", "-fl", action="store_true", help=logger.help_log("```--file``` or ```-fl``` -> Apaga um arquivo específico."))
+parent_remove.add_argument("--full", "-f", action="store_true", help=logger.help_log("```--full``` or ```-f``` -> Apaga tudo da pasta."))
 
 # parser principal
 parser = ap.ArgumentParser(description="Ryzor")
-subparsers = parser.add_subparsers(dest="comando", help="[Ryzor] Comandos disponíveis")
+subparsers = parser.add_subparsers(dest="comando", help=logger.help_log("\n[primary][Ryzor][/] [normal 2]---Comandos disponíveis---[/]\n"))
 
 # subparsers recebem o parent (herdam os flags)
-parser_organize = subparsers.add_parser("organize", parents=[parent], help="[Ryzor] Apenas organiza os arquivos do caminho passado")
-parser_backup = subparsers.add_parser("backup", parents=[parent], help="[Ryzor] Faz o backup e organiza os arquivos do caminho passado")
-parser_list = subparsers.add_parser("list", parents=[parent], help="[Ryzor] Lista arquivos, tipos de arquivos e extensões suportadas por cada um.")
-parser_define = subparsers.add_parser("define", parents=[parent], help="[Ryzor] Define um novo tipo de arquivo")
-parser_edit = subparsers.add_parser("remove", parents=[parent], help="[Ryzor] Edita a propiedade passada.")
-parser_version = subparsers.add_parser("version", help="[Ryzor] Informa a versão atual do Ryzor.")
-parser_repair = subparsers.add_parser("repair", help="[Ryzor] Restaura o Ryzor para versão de fábrica.")
+parser_help = subparsers.add_parser("help", parents=[parent])
+parser_organize = subparsers.add_parser("organize", parents=[parent], help=logger.help_log("```ryzor organize -p <pasta de origem> -d <pasta de destino>``` -> Apenas organiza os arquivos do caminho passado."))
+parser_backup = subparsers.add_parser("backup", parents=[parent], help=logger.help_log("```ryzor backup -p <pasta de origem> -d <pasta de destino>``` -> Faz o backup e organiza os arquivos do caminho passado."))
+parser_list = subparsers.add_parser("list", parents=[parent], help=logger.help_log("```ryzor list``` -> Lista arquivos.\n\t```ryzor list -e_exts``` -> Lista tipos de arquivos e extensões suportadas por cada um.\n"))
+parser_define = subparsers.add_parser("define", parents=[parent], help=logger.help_log("```ryzor define -t <tipo de arquivos> -e_exts <extensões que o arquivo suporta>``` -> Define um novo tipo de arquivo e extensões suportadas.\n"))
+parser_edit = subparsers.add_parser("remove", parents=[parent_remove], help=logger.help_log("```ryzor remove -t <tipo de arquivos>``` -> Remove o tipo de arquivos todo.\n\t```ryzor remove -t <tipo de arquivos> -exts <extensões ou '.' para todas>``` -> Remove todas as extensões do tipo passado...\n"))
+parser_version = subparsers.add_parser("version", help=logger.help_log("```ryzor version``` -> Informa a versão atual do Ryzor."))
+parser_repair = subparsers.add_parser("repair", help=logger.help_log("```ryzor repair``` -> Restaura o Ryzor para versão de fábrica."))
 
-parser_list.add_argument("--exists_extensions", "-e_exts", action="store_true", help="[Ryzor] Define que os tipos de arquivos/ extensões suportadas serão listadas")
-parser_define.add_argument("--overwrite", "-ow", action="store_true", help="[Ryzor] Sobre escreve um tipo/extensão já existente")
+parser_list.add_argument("--exists_extensions", "-e_exts", action="store_true", help=logger.help_log("```-e_exts (extensões existentes)``` -> Define que os tipos de arquivos/ extensões suportadas serão listadas."))
+parser_define.add_argument("--overwrite", "-ow", action="store_true", help=logger.help_log("```-ow``` -> Sobrescreve um tipo/extensão já existente.\n"))
 
 # parse args
 args = parser.parse_args()
@@ -39,8 +84,7 @@ args = parser.parse_args()
 # dispatch
 match args.comando:
     case "version":
-        ascii_banner = pyfiglet.figlet_format("Ryzor")
-        log(f"[primary]{ascii_banner}[/]\n[secondary]By: Lucas Paulino\nVersion: 0.1.1[/]", code=0)
+        logger.version()
 
     case "organize":
         file_manager.realocate_files(args.path, args.destination, backup=False, no_preview=args.no_preview, verbose=args.verbose, y=args.yes)
@@ -60,5 +104,12 @@ match args.comando:
     case "remove":
         remover.remover_extensoes(type=args.type, extensions=args.extensions, no_preview=args.no_preview, y=args.yes)
 
+    case "help":
+        logger.show_help()
+
+    case "repair":
+        logger.log("repair ainda em desenvolvimento.", debug=True, code=10)
+        quit()
+
     case _:
-        parser.print_help()
+        logger.show_help()

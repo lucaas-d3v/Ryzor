@@ -1,188 +1,201 @@
 """Arquivo principal do Ryzor"""
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from pathlib import Path
 import shutil as sh
 import json
-import os
-from modules import definer as df
-from logger import log
-from logger import barra_carregamento_com_callback    
 
-def continuar(y: bool = False) -> bool:
-    """
-    Para evitar chamadas duplicadas, criei continuar() para perguntar ao usuário se quer confirmar a ação.
-    """
+try:
+    from .logger import Logger
 
-    if y:
-        return True
+except (ModuleNotFoundError, ImportError):
+    from rich.console import Console
 
-    aproveds = ["y", "s", "yes", "sim", "ok"]
-    
-    log("Deseja continuar? (s/n): ", code=10, end="")
-    c = input().lower().strip()
+    console = Console()
 
-    return c in aproveds
+    console.print("[#e43e5a bold][Debug] Erro: File_manger O módulo 'logger' não encontrado nos arquivos do ryzor, tente `ryzor repair`[/]")
+    console.print("[#e43e5a bold][Debug] Cancelando...")
+    quit()
 
-sep = os.sep  # pega separador do sistema
+logger = Logger()
 
-def execute(mudancas: dict[str, str], callback=None, backup:bool = False, verbose:bool =False):
-    """
-    Executa copiar/mover arquivos de acordo com o dicionário mudancas.
-    """
+try:
+    from .definer import Definer
 
-    try:
-        total = len(mudancas)
-            
-        for i, (arquivo, destino) in enumerate(mudancas.items(), start=1):
-            _arquivo = Path(arquivo)
-            _destino = Path(destino)
+except (ModuleNotFoundError, ImportError):
+    logger.log_error("Erro: O módulo 'definer' não encontrado nos arquivos do ryzor", True)
+    logger.log_error("Cancelando...")
 
-            if _arquivo.resolve() == _destino.resolve():
-                continue
+    quit()
 
-            # Criar diretório de destino se não existir
-            _destino.parent.mkdir(parents=True, exist_ok=True)
+from .utils import Util
 
-            # Executa ação real
-            if backup:
-                sh.copy2(_arquivo, _destino)
-            else:
-                sh.move(_arquivo, _destino)
+#except (ModuleNotFoundError, ImportError):
+#    logger.log_error("Erro: O módulo 'utils' não encontrado nos arquivos do ryzor", True)
+#    logger.log_error("Cancelando...")
+#
+#    quit()
 
-            # CRÍTICO: Chamar callback APÓS a operação
-            if callback:
-                callback(
-                    atual=i,
-                    total=total,
-                    nome_arquivo=_destino.name,
-                    acao="Copiando" if backup else "Movendo"
-                )
+class FileManager:
+    def __init__(self):
+        self.sep = os.sep  # pega separador do sistema
+        self.definer = Definer()
 
-        return True
+    def rename(self, file: Path, qtd: list[int] = [0]) -> Path:
+        stem = file.stem            # nome do arquivo sem extensão
+        extensao = "".join(file.suffixes)  # todas as extensões juntas (ex: ".tar.gz")
 
-    except Exception as e:
-        print(f"[DEBUG] Erro em execute: {e}")
-        return False
+        ultimo = max(qtd)
+        new_name = f"{stem} ({ultimo + 1}){extensao}"
 
-def realocate_files(
-        entrada: Path, saida: Path,
-        backup: bool = False,
-        no_preview: bool = False,
-        verbose: bool = False,
-        y: bool = False
-    ) -> bool:
-    
-    """ Função principal, papel: fazer backup/organizar os arquivo
-    Função principal do Ryzor
+        return file.with_name(new_name)
 
-    args:
-        entrada: caminho de entrada dos arquivos a serem organizados/backup.
-        saida: caminho de saída onde os arquivos seram levados ao fim do processo.
-        backup: informa será feito o backup pu apenas organização.
-        no_preview: informa se o usuário quer desativar o preview de tudo antes da ação.
-        verbose: informa será o usuário quer ssber literalmente tudo, caminhos completos e demais.
-        y: pré-responde sim para a ação escolhida.
+    def realocate_files(self, 
+            entrada: Path, saida: Path,
+            backup: bool = False,
+            no_preview: bool = False,
+            verbose: bool = False,
+            y: bool = False
+        ) -> bool | None:
         
-    returns:
-        retorna False caso o caminho seja um caminho ou n exista, etc, ou True caso tudo ocorra como esperado.
-    """
+        """ 
+        Função principal, papel: fazer backup/organizar os arquivo
 
-    if not entrada.exists():
+        args:
+            entrada: caminho de entrada dos arquivos a serem organizados/backup.
+            saida: caminho de saída onde os arquivos seram levados ao fim do processo.
+            backup: informa será feito o backup pu apenas organização.
+            no_preview: informa se o usuário quer desativar o preview de tudo antes da ação.
+            verbose: informa será o usuário quer ssber literalmente tudo, caminhos completos e demais.
+            y: pré-responde sim para a ação escolhida.
+            
+        returns:
+            retorna False caso o caminho seja um caminho ou n exista, etc, ou True caso tudo ocorra como esperado.
         """
-        Medida de segurança caso o diretório informado não exista.
-        """
-        return False
 
-    if not entrada.is_dir():
-        """
-        Medida de segurança caso o caminho especificado não seja um diretório.
-        """
-        return False
+        if not entrada.exists():
+            """
+            Medida de segurança caso o diretório informado não exista.
+            """
+            logger.log_error("O caminho de entrada não existe.")
+            logger.log_error("Cancelando")
 
-    if not saida.exists():
-        """
-        Medida de segurança caso a saida não exista.
-        """
-        saida.mkdir(parents=True, exist_ok=True)
+            return False
 
-    if not saida.is_dir():
-        """
-        Medida de segurança, caso a saida não seja um diretório.
-        """
-        return False
+        if not entrada.is_dir():
+            """
+            Medida de segurança caso o caminho especificado não seja um diretório.
+            """
+            logger.log_error("O caminho informado não pode ser um arquivo.")
 
-    def not_in_backup_folder(arquivo: Path) -> bool:
-        return "backup" not in [p.lower() for p in arquivo.parts[:-1]]
-    
-    def buscar_arquivos_generator():
-        '''Generator que faz a busca real dos arquivos'''
-        contador = 0
-        for arquivo in entrada.rglob("*"):
-            if arquivo.is_file() and not_in_backup_folder(arquivo):
-                contador += 1
-                yield arquivo, contador  # Retorna arquivo e total atual
-    
-    # Chama a barra passando o generator como callback
-    arquivos = barra_carregamento_com_callback(buscar_arquivos_generator)
-    
-    try:
-        arquivos_a_mudar = {}
+            return False
+
+        if not saida.exists():
+            """
+            Medida de segurança caso a saida não exista.
+            """
+
+            logger.log("O caminho de saida não existe.", code=9, debug=True)
+            logger.log("Tentando Criar...", debug=True, code=10)
+            
+            try:
+
+                saida.mkdir(parents=True, exist_ok=True)
+                logger.log("Caminho de saída criado com sucesso.", code=11)
+                logger.log("Continuando...", code=11)
+
+            except PermissionError:
+                logger.log_error(f"Erro, o Ryzor não tem permissão para atuar em {saida}")
+                return False
+            
+        if not saida.is_dir():
+            """
+            Medida de segurança, caso a saida não seja um diretório.
+            """        
+            logger.log_error("O caminho informado não pode ser um arquivo.")
+
+            return False
+
+        def not_in_backup_folder(arquivo: Path) -> bool:
+            return "backup" not in [p.lower() for p in arquivo.parts[:-1]]
+        
+        def buscar_arquivos_generator():
+            """Generator que faz a busca real dos arquivos"""
+            
+            contador = 0
+
+            for arquivo in entrada.rglob("*"):
+                if arquivo.is_file() and not_in_backup_folder(arquivo):
+                    contador += 1
+                    yield arquivo.resolve(), contador  # Retorna arquivo e total atual
+        
+        # Chama a barra passando o generator como callback
+        arquivos = logger.barra_carregamento_com_callback(buscar_arquivos_generator, self.sep, verbose)
+        
+        if arquivos is None:
+            logger.log_error("Não existem arquivos no caminho informado.")
+            
+            return False
 
         try:
-            tipos_de_arquivos = df.ler_extensoes()
+            arquivos_a_mudar = {}
+            logger.log("Carregando extensões...", code=10)
+            
+            try:
+                tipos_de_arquivos = self.definer.ler_extensoes()
+                logger.log("Extensões carregadas com sucesso.", code=11)
+            
+            except (FileNotFoundError, json.JSONDecodeError) as e:
+                logger.log_error(f"Erro ao carregar as extensões: {e}", True)
 
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            log(f"Erro ao carregar JSON: {e}", code=9)
-            return False
+                return False
+            
+            if not isinstance(tipos_de_arquivos, dict):
+                logger.log_error("As extensões não são um dicionário válido", True)
+    
+                return False
+            
+            for arquivo in arquivos:
+                pasta_destino = Path(saida / arquivo.suffix[1:])
+            
+                for tipo, extensoes in tipos_de_arquivos.items():
+                    extensoes_do_arquivo: list = arquivo.suffixes
+                    
+                    # Verifica se há interseção entre as extensões
+                    if any(ext in extensoes for ext in extensoes_do_arquivo):
+                        pasta_destino = Path((saida / "backup" / tipo) if backup else (saida / tipo))
+                        break
 
-        if not isinstance(tipos_de_arquivos, dict):
-            log("JSON não é um dicionário válido", code=9)
-            return False
-
-        if not verbose:
-            log(f"Começando em {entrada.resolve()} ...", code=4)  # CORREÇÃO 2: Mostrar entrada, não cwd()
-            log(f"Modo: {'Backup' if backup else 'Organização'}", code=10)
-            log(f"Total de modificaçoes: {len(arquivos)}", code=8)  # CORREÇÃO 3: Remover +1
-            log(f"\t    Atual {'-' * 17} Pós-mudanças\n", code=11) if not no_preview else print()
-
-        else:
-            log(f"Começando em {entrada} ...", code=4)
-            log(f"Modo: {'Backup' if backup else 'Organização'}", code=10)
-            log("Verbose: On", code=10)
-            log(f"Total de modificaçoes: {len(arquivos)}", code=8)  # CORREÇÃO 3: Remover +1
-            log(f"\t    Atual {'-' * 17} Pós-mudanças\n", code=11) if not no_preview else print()
-
-        for arquivo in arquivos:
-            pasta_destino = Path(saida / arquivo.suffix[1:])
-
-            for tipo, extensoes in tipos_de_arquivos.items():
-                if any(arquivo.suffix.lower().endswith(ext) for ext in extensoes):
-                    pasta_destino = Path(saida / tipo)
-                    break
-            else:
-                pasta_destino = Path(f"{saida}/Sem_Extensões")
-
-            pasta_destino.mkdir(parents=True, exist_ok=True)
-            destino = pasta_destino / arquivo.name
-
-            # CORREÇÃO 4: Simplificar - não precisa repetir código para backup/organização
-            if not no_preview:
-                if verbose:
-                    log(f"{arquivo} -> {destino}")
                 else:
-                    log(f"{sep.join(arquivo.parts[-2:])} -> {sep.join(destino.parts[-2:])}")
+                    pasta_destino = Path(f"{saida}/Sem_Extensões")
 
-            arquivos_a_mudar[str(arquivo)] = str(destino)
+                destino = pasta_destino / arquivo.name
 
-        # CORREÇÃO 5: Mover else para fora do for loop
-        if continuar(y):
-            from logger import barra_progresso
-            barra_progresso(arquivos_a_mudar, backup=backup)
-            return True
-        else:
-            log("Cancelando...", code=10)
+                arquivos_a_mudar[str(arquivo)] = str(destino)
+            
+            logger.log_mudancas(arquivos_a_mudar, self.sep, verbose=verbose, backup=backup)
+
+            
+            if Util.continuar(y=y):
+                try:
+                    from src.modules.logger import barra_progresso
+
+                except (ModuleNotFoundError, ImportError):
+                    logger.log_error("Erro: O módulo logger não encontrado nos arquivos do ryzor",True)
+                    logger.log_error("Cancelando...")
+
+                    return False
+
+                barra_progresso(arquivos_a_mudar, backup=backup)
+                return True
+            
+            else:
+                logger.log("Cancelando...", code=10)
+                return False
+
+        except PermissionError:
+            logger.log(f"Erro: O Ryzor não tem permissão para atuar em {saida}", debug=True, code=9)
             return False
-
-    except Exception as e:
-        log(f"Erro: {e}", code=9)
-        return False
