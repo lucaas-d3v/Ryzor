@@ -119,10 +119,10 @@ class FileManager:
 
             return False
 
-        def not_in_backup_folder(self, arquivo: Path) -> bool:
+        def not_in_backup_folder(arquivo: Path) -> bool:
             return "backup" not in [p.lower() for p in arquivo.parts[:-1]]
         
-        def buscar_arquivos_generator(self, ):
+        def buscar_arquivos_generator():
             """Generator que faz a busca real dos arquivos"""
             
             contador = 0

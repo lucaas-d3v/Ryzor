@@ -24,36 +24,26 @@ import contextlib
 class Logger:
     def __init__(self):
         self.ryzor_theme = Theme({
-            "normal":     "#FFFCDB",
-            "normal 2":   "#FFFCDB bold",
-            "primary":    "#00FF84 bold",   # sucesso/destaques principais
-            "secondary":  "#00CFFF bold",   # infos/destaques secundários
-            "background": "on #7F001F",
-            "text":       "#FFFCDB",
-            "muted":      "#CFC7B8",
-            "accent":     "#28F0D5",        # neon extra / efeitos especiais
-            "error":      "#FF3B5C bold",
-            "warning":    "#FFC107 bold",
-            "success":    "#00FF84"
+            "logo":       "#FFFCDB bold",   # vermelho/magenta - logo
+            "normal":     "#FFFCDB",        # texto normal (creme)
+            "normal 2":   "#FFFCDB bold",   # texto normal em bold
+            "primary":    "#00FF84 bold",   # verde neon - sucesso/destaques principais
+            "secondary":  "#00CFFF bold",   # ciano - infos/destaques secundários
+            "background": "on #7F001F",     # fundo bordô
+            "text":       "#FFFCDB",        # texto principal (creme)
+            "muted":      "#CFC7B8",        # texto secundário
+            "accent":     "#28F0D5",        # turquesa neon extra / efeitos especiais
+            "error":      "#FF3B5C bold",   # vermelho/magenta - erro
+            "warning":    "#FFC107 bold",   # amarelo - alerta
+            "success":    "#00FF84"         # verde neon (sem bold)
         })
 
-        self.keys = ["normal", # 1
-                "normal 2", # 2
-                "primary", # 3
-                "secondary", # 4
-                "background", # 5
-                "text", # 6
-                "muted", # 7
-                "accent", # 8
-                "error", # 9
-                "warning", # 10
-                "success" # 11
-            ]
-
+        self.keys = list(self.ryzor_theme.styles.keys())
+        
         self.console = Console(theme=self.ryzor_theme)
 
     def logo(self):
-        return pyfiglet.figlet_format("Ryzor")
+        return pyfiglet.figlet_format("Ryzor", font="isometric1")
 
     def version(self):
         ascii_banner = self.logo()
@@ -65,11 +55,11 @@ class Logger:
             term_width = self.console.size.width
             left_pad = max((term_width - block_width) // 2, 0)
             for line in lines:
-                self.console.print(" " * left_pad + line.rstrip(), style="primary")
+                self.console.print(" " * left_pad + f"[logo]{line.rstrip()}[/]")
 
         print()
 
-        self.console.rule(style="primary")
+        self.console.rule(style="error")
 
         version_table = Table(
             title="",
@@ -80,14 +70,14 @@ class Logger:
             box=None,
             padding=(0,1),
         )
+        version_table.add_row("[normal]By:[/] [primary]~K'[/]")
+        version_table.add_row("[#FFC107]Version: 0.2.0[/]")
 
-        version_table.add_row("[secondary]By: Lucas Paulino[/]")
-        version_table.add_row("[secondary]Version: 0.1.7[/]")
 
         self.console.print(version_table, justify="center")
         self.console.print()
 
-        self.console.rule(style="primary")
+        self.console.rule(style="error")
 
     def show_help(self):
         ascii_logo = self.logo().rstrip("\n")
