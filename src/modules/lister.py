@@ -1,32 +1,40 @@
 """Arquivo responsável por gerenciar o comando 'list' """
 
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from pathlib import Path
-from modules import definer
+from .definer import Definer
 from pprint import pprint
 
-def mostrar(conteudo: list[Path], verbose: bool = False):
-    for content in conteudo:
-        tipo = "Arquivo" if content.is_file() else "Diretório" if content.is_dir() else "Outro"
-        info = content.resolve() if verbose else content.name
-        print(f"[Ryzor] {info} - Tipo: {tipo}")
 
+class Lister:
+    def __init__(self):
+        self.definer = Definer()
 
-def lister(caminho: Path, recursive_mode: bool = False, verbose: bool = False):
-    if not caminho.exists():
-        print("[Ryzor] Caminho não existe")
-        return
-    
-    if caminho.is_file():
-        print("[Ryzor] O caminho não pode ser um arquivo")
-        return
+    def mostrar(self, conteudo: list[Path], verbose: bool = False):
+        for content in conteudo:
+            tipo = "Arquivo" if content.is_file() else "Diretório" if content.is_dir() else "Outro"
+            info = content.resolve() if verbose else content.name
+            print(f"[Ryzor] {info} - Tipo: {tipo}")
 
-    if recursive_mode:
-        conteudo = list(caminho.rglob("*"))
+    def lister(self, caminho: Path, recursive_mode: bool = False, verbose: bool = False):
+        if not caminho.exists():
+            print("[Ryzor] Caminho não existe")
+            return
+        
+        if caminho.is_file():
+            print("[Ryzor] O caminho não pode ser um arquivo")
+            return
 
-    else:    
-        conteudo = list(caminho.iterdir())
+        if recursive_mode:
+            conteudo = list(caminho.rglob("*"))
 
-    mostrar(conteudo, verbose)    
+        else:    
+            conteudo = list(caminho.iterdir())
 
-def lister_extensions():
-    pprint(definer.ler_extensoes())
+        self.mostrar(conteudo, verbose)    
+
+    def lister_extensionsself(self):
+        pprint(self.definer.ler_extensoes())
