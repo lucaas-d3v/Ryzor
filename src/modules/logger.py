@@ -1,15 +1,22 @@
 """Arquivo responsável pelas informações do terminal"""                                                         
 
-from rich import box                                    
-from rich.table import Table                            
-from rich.console import Console                        
-from rich.theme import Theme                            
-from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn                                  
-from rich.progress import SpinnerColumn, TimeElapsedColumn                                                      
-from rich.live import Live                              
-from rich.align import Align                            
-from rich.progress import SpinnerColumn, BarColumn      
-from rich.theme import Theme
+try:
+    from rich import box                                    
+    from rich.table import Table                            
+    from rich.console import Console                        
+    from rich.theme import Theme                            
+    from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn                                  
+    from rich.progress import SpinnerColumn, TimeElapsedColumn                                                      
+    from rich.live import Live                              
+    from rich.align import Align                            
+    from rich.progress import SpinnerColumn, BarColumn      
+    from rich.theme import Theme
+
+except (ModuleNotFoundError, ImportError):
+    print(f"[Debug] Erro: Módulo Rich não encontrado nos arquivos do ryzor, tente `ryzor repair`")
+    print("[Debug] Cancelando...")
+        
+    quit() 
 
 from pathlib import Path                                
 import time
@@ -21,21 +28,21 @@ import termios
 import tty
 import contextlib
 
-class Logger:
+class ConsoleManager:
     def __init__(self):
         self.ryzor_theme = Theme({
-            "logo":       "#FFFCDB bold",   # vermelho/magenta - logo
-            "normal":     "#FFFCDB",        # texto normal (creme)
-            "normal 2":   "#FFFCDB bold",   # texto normal em bold
-            "primary":    "#00FF84 bold",   # verde neon - sucesso/destaques principais
-            "secondary":  "#00CFFF bold",   # ciano - infos/destaques secundários
-            "background": "on #7F001F",     # fundo bordô
-            "text":       "#FFFCDB",        # texto principal (creme)
-            "muted":      "#CFC7B8",        # texto secundário
-            "accent":     "#28F0D5",        # turquesa neon extra / efeitos especiais
-            "error":      "#FF3B5C bold",   # vermelho/magenta - erro
-            "warning":    "#FFC107 bold",   # amarelo - alerta
-            "success":    "#00FF84"         # verde neon (sem bold)
+            "logo":       "#FFFCDB bold",   #1
+            "normal":     "#FFFCDB",      #2
+            "normal 2":   "#FFFCDB bold",   #3
+            "primary":    "#00FF84 bold",   #4
+            "secondary":  "#00CFFF bold",   #6
+            "background": "on #7F001F",     #7
+            "text":       "#FFFCDB",      #8
+            "muted":      "#CFC7B8",      #9
+            "accent":     "#28F0D5",      #10
+            "error":      "#FF3B5C bold",   #11
+            "warning":    "#FFC107 bold",   #12
+            "success":    "#00FF84"       #13
         })
 
         self.keys = list(self.ryzor_theme.styles.keys())
@@ -71,7 +78,7 @@ class Logger:
             padding=(0,1),
         )
         version_table.add_row("[normal]By:[/] [primary]~K'[/]")
-        version_table.add_row("[#FFC107]Version: 0.2.0[/]")
+        version_table.add_row("[#FFC107]Version: 0.2.5[/]")
 
 
         self.console.print(version_table, justify="center")
@@ -173,9 +180,9 @@ class Logger:
         self.console.print()
 
     def log_error(self, mensagem, repair: bool = False, cancel: bool = True):
-        inicio = "[warning][Debug][/]"
+        inicio = "[Erro]"
 
-        mensagem = f"{inicio} [error]{mensagem}[/]"
+        mensagem = f"[error]{inicio} {mensagem}[/]"
 
         if repair:
             mensagem += ", tente `ryzor repair`."
@@ -199,7 +206,7 @@ class Logger:
 
         self.console.print(f"{mensagem}", end=end, justify="center")
 
-    def barra_progresso(self, mudancas: dict[str, str], backup=True):
+    def progress_bar(self, mudancas: dict[str, str], backup=True):
         """
         Cria barra de progresso Rich centralizada e executa arquivos via callback.
         """
@@ -324,7 +331,7 @@ class Logger:
             return sep.join(parts[-2:])
 
 
-    def barra_carregamento_com_callback(self, callback_busca, sep, verbose = False):
+    def loading_bar_with_callback(self, callback_busca, sep, verbose = False):
         """
         Barra de progresso que executa uma função callback para buscar arquivos.
         Agora permite interromper com 'q' (sem Enter) ou com Ctrl+C.

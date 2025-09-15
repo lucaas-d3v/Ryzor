@@ -1,48 +1,35 @@
-"""Arquivo principal do Ryzor"""
+"""Arquivo principal de gerenciamento de arquivos do Ryzor"""
 
-import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
 from pathlib import Path
 import shutil as sh
 import json
 
-try:
-    from .logger import Logger
-
-except (ModuleNotFoundError, ImportError):
-    from rich.console import Console
-
-    console = Console()
-
-    console.print("[#e43e5a bold][Debug] Erro: File_manger O módulo 'logger' não encontrado nos arquivos do ryzor, tente `ryzor repair`[/]")
-    console.print("[#e43e5a bold][Debug] Cancelando...")
-    quit()
-
-logger = Logger()
+# caminho da pasta do próprio módulo (src/modules)
+MODULE_DIR = Path(__file__).resolve().parent
 
 try:
-    from .definer import Definer
+    from .utils import Utils
+    utils = Utils()
 
 except (ModuleNotFoundError, ImportError):
-    logger.log_error("Erro: O módulo 'definer' não encontrado nos arquivos do ryzor", True)
-    logger.log_error("Cancelando...")
-
+    print(f"[Debug] Erro: Módulo utils não encontrado nos arquivos do ryzor, tente `ryzor repair`")
+    print("[Debug] Cancelando...")
     quit()
 
-from .utils import Util
+# valida se os módulos estão ok
+if utils.validate_modules():
+    from .logger import ConsoleManager
+    from .definer import DefinitionManager
+else:
+    quit()
 
-#except (ModuleNotFoundError, ImportError):
-#    logger.log_error("Erro: O módulo 'utils' não encontrado nos arquivos do ryzor", True)
-#    logger.log_error("Cancelando...")
-#
-#    quit()
+logger = ConsoleManager()
 
-class FileManager:
+class FileController:
     def __init__(self):
         self.sep = os.sep  # pega separador do sistema
-        self.definer = Definer()
+        self.definer = DefinitionManager()
 
     def rename(self, file: Path, qtd: list[int] = [0]) -> Path:
         stem = file.stem            # nome do arquivo sem extensão
@@ -53,7 +40,7 @@ class FileManager:
 
         return file.with_name(new_name)
 
-    def realocate_files(self, 
+    def relocate_files(self, 
             entrada: Path, saida: Path,
             backup: bool = False,
             no_preview: bool = False,
@@ -179,7 +166,7 @@ class FileManager:
             logger.log_mudancas(arquivos_a_mudar, self.sep, verbose=verbose, backup=backup)
 
             
-            if Util.continuar(y=y):
+            if utils.continue_action(y=y):
                 try:
                     from src.modules.logger import barra_progresso
 

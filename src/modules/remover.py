@@ -2,21 +2,34 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from .definer import Definer
-from .file_manager import FileManager
-from .logger import Logger
-from .utils import Util
-from pathlib import Path
-from send2trash import send2trash   
+try:
+    from .utils import Utils
+    util = Utils()
 
-class Remover():
+except (ModuleNotFoundError, ImportError):
+    print(f"[Debug] Erro: Módulo utils não encontrado nos arquivos do ryzor, tente `ryzor repair`")
+    print("[Debug] Cancelando...")
+        
+    quit()    
+
+if util.validate_modules():
+    from .definer import DefinitionManager
+    from .file_manager import FileController
+    from .logger import ConsoleManager
+    from pathlib import Path
+    from send2trash import send2trash   
+
+else:
+    quit()
+
+class DeletionManager():
     def __init__(self):
-        self.logger = Logger()
-        self.definer = Definer()
-        self.file_manager = FileManager()
-        self.util = Util()
+        self.console_manager = ConsoleManager()
+        self.definition_manager = DefinitionManager()
+        self.file_controller = FileController()
+        self.utils = util
 
-    def remover_extensoes(self, type, extensions, no_preview, y: bool = False):
+    def remove_extensions(self, type, extensions, no_preview, y: bool = False):
         """
         args:
             type: tipo das extensões.
@@ -24,7 +37,7 @@ class Remover():
             y: continuar sem perguntar
         """
 
-        data = self.definer.ler_extensoes()
+        data = self.definition_manager.read_extensions()
 
         if not type in data:
             print(f"[Ryzor] {type} não existe, use `ryzor define -t <tipo das extensoes> -exts <extensoes>` para adicionar uma nova extensao.")
@@ -34,12 +47,12 @@ class Remover():
             if not no_preview:
                 print(f"[Ryzor] O tipo {type} sera apagado.")
             
-                if not self.file_manager.continuar(y=y):       
+                if not self.file_controller.continuar(y=y):       
                     print("[Ryzor] Alterações canceladas")
                     return
         
             data.pop(type)
-            self.definer.salvar_extensoes(data)
+            self.definition_manager.save_extensions(data)
 
             print(f"[Ryzor] O tipo {type} foi apagado com sucesso!")
             return
@@ -55,7 +68,7 @@ class Remover():
         indices_remove = []
 
         if isinstance(extensions, list):
-            extensions = self.definer._normalize_extensions_input(extensions)
+            extensions = self.definition_manager.normalize_extensions_input(extensions)
     
             for extensao in extensions:
                 if extensao in data[type]:
@@ -68,7 +81,7 @@ class Remover():
             data[type] = []
 
         if no_preview:
-            self.definer.salvar_extensoes(data)
+            self.definition_manager.save_extensions(data)
 
         else:     
             print(f"""
@@ -78,14 +91,14 @@ class Remover():
                   Depois
                   {data[type]}""")
         
-            if not self.file_manager.continuar(y=y):       
+            if not self.file_controller.continuar(y=y):       
                 print("[Ryzor] Alterações canceladas")
                 return
 
-        self.definer.salvar_extensoes(data)
+        self.definition_manager.save_extensions(data)
         print("[Ryzor] Modificações slvas com sucesso!")
 
-    def remover_lista(self, alvos: list[Path], mensagem: list[str], no_lixeira: bool = False) -> bool:
+    def remover_list(self, alvos: list[Path], mensagem: list[str], no_lixeira: bool = False) -> bool:
         if no_lixeira:
             for alvo in alvos:
                 try:
@@ -95,14 +108,14 @@ class Remover():
                         alvo.rmdir()
 
                 except PermissionError:
-                    self.logger.log_error(f"Ryzor não tem permissão para apagar {alvo.name}")
+                    self.console_manager.log_error(f"Ryzor não tem permissão para apagar {alvo.name}")
             
                     break
 
         
             else:
             
-                self.logger.log(f"{mensagem[0]} {mensagem[1]} foi {mensagem[2]} com sucesso!",code=11)
+                self.console_manager.log(f"{mensagem[0]} {mensagem[1]} foi {mensagem[2]} com sucesso!",code=11)
 
                 return True
     
@@ -113,18 +126,18 @@ class Remover():
                 send2trash(str(alvo))
     
             except PermissionError:
-                self.logger.log_error(f"Ryzor não tem permissão para mover {alvo.name} a lixeira.")
+                self.console_manager.log_error(f"Ryzor não tem permissão para mover {alvo.name} a lixeira.")
 
                 break
 
     
         else:
-            self.logger.log(f"{mensagem[0]} {mensagem[1]} foi {mensagem[2]} com sucesso!",code=11)
+            self.console_manager.log(f"{mensagem[0]} {mensagem[1]} foi {mensagem[2]} com sucesso!",code=11)
             return True
 
         return False
 
-    def remover_arquivo(self, alvo: Path, mensagem: list[str], no_lixeira: bool = False):
+    def remove_file(self, alvo: Path, mensagem: list[str], no_lixeira: bool = False):
         if no_lixeira:
             try:
                 if alvo.is_file():
@@ -134,28 +147,28 @@ class Remover():
                     alvo.rmdir()
         
 
-                self.logger.log(f"{mensagem[0]} {mensagem[1]} foi {mensagem[2]} com sucesso!",code=11)
+                self.console_manager.log(f"{mensagem[0]} {mensagem[1]} foi {mensagem[2]} com sucesso!",code=11)
 
                 return True
         
             except PermissionError:
-                self.logger.log_error(f"Ryzor não tem permissão para apagar {alvo.name}")
+                self.console_manager.log_error(f"Ryzor não tem permissão para apagar {alvo.name}")
                 return False
 
         try:
             send2trash(str(alvo))
-            self.logger.log(f"{mensagem[0]} {mensagem[1]} foi {mensagem[2]} com sucesso!",code=11)
+            self.console_manager.log(f"{mensagem[0]} {mensagem[1]} foi {mensagem[2]} com sucesso!",code=11)
 
             return True
 
         except PermissionError:
-            self.logger.log_error(f"Ryzor não tem permissão para mover {alvo.name} a lixeira.")
+            self.console_manager.log_error(f"Ryzor não tem permissão para mover {alvo.name} a lixeira.")
             return False
 
     def remover(self, alvo, full: bool = False, y: bool = False, no_lixeira: bool = False):
 
         if not alvo.exists():
-            self.logger.log_error("Alvo da remoção não existe.")
+            self.console_manager.log_error("Alvo da remoção não existe.")
         
             return False
     
@@ -171,14 +184,14 @@ class Remover():
                 mensagem[2] = "excluida"
 
 
-        self.logger.log(f"{mensagem[0]} {mensagem[1]} {alvo.name} será {mensagem[2]} ",code=10)
+        self.console_manager.log(f"{mensagem[0]} {mensagem[1]} {alvo.name} será {mensagem[2]} ",code=10)
         
-        if self.util.continuar(y=y):
+        if self.utils.continue_action(y=y):
             if isinstance(alvo, list):
-                return self.remover_lista(alvos=alvo, no_lixeira=no_lixeira, mensagem=mensagem)
+                return self.remover_list(alvos=alvo, no_lixeira=no_lixeira, mensagem=mensagem)
 
-            return self.remover_arquivo(alvo=alvo, mensagem=mensagem)
+            return self.remove_file(alvo=alvo, mensagem=mensagem)
 
         else:    
-            self.logger.log("Cancelando...", code=10)
+            self.console_manager.log("Cancelando...", code=10)
             return False

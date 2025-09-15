@@ -4,11 +4,11 @@ import json
 from pathlib import Path
 from typing import Iterable, List, Union
 
-class Definer:
+class DefinitionManager:
     def __init__(self):
         pass
 
-    def _normalize_extensions_input(self, exts: Union[str, Iterable]) -> List[str]:
+    def normalize_extensions_input(self, exts: Union[str, Iterable]) -> List[str]:
         """
         Garante que o input de extensões vire uma lista de strings correta.
         Aceita: lista, tupla, string '.xml', string '[".xml",".py"]' ou '.xml,.py'.
@@ -37,7 +37,7 @@ class Definer:
 
         return [str(exts)]
 
-    def salvar_extensoes(self, data: dict[str, list[str]]):
+    def save_extensions(self, data: dict[str, list[str]]):
         base_dir = Path(__file__).parent
         json_path = base_dir / "data" / "extensions.json"
 
@@ -47,18 +47,20 @@ class Definer:
             json.dump(data, f, ensure_ascii=False, indent=4)
         
 
-    def ler_extensoes(self, ) -> dict[str, list[str]]:
+    def read_extensions(self, json_path: Path) -> dict[str, list[str]]:
         base_dir = Path(__file__).parent
-        json_path = base_dir / "data" / "extensions.json"
+        
+        if not json_path:
+            JSON_PATH = base_dir / "data" / "extensions.json"
 
-        json_path.parent.mkdir(parents=True, exist_ok=True)
+        JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-        with json_path.open("r", encoding="utf-8-sig") as f:
+        with JSON_PATH.open("r", encoding="utf-8-sig") as f:
             data = json.load(f)
 
         return data
 
-    def escrever_extensoes(self, extensoes: dict[str, list[str]], overwrite: bool = False) -> bool:
+    def write_extensions(self, extensoes: dict[str, list[str]], overwrite: bool = False) -> bool:
         base_dir = Path(__file__).parent
         json_path = base_dir / "data" / "extensions.json"
 
@@ -66,7 +68,7 @@ class Definer:
         
         try:
             try:
-                data = self.ler_extensoes()
+                data = self.read_extensions()
 
                 if not isinstance(data, dict):
                     data = {}
@@ -103,7 +105,7 @@ class Definer:
             return False
 
 
-    def definer(self, type_arg: Union[str, Iterable[str]], extensions_suported: Union[str, Iterable], overwrite: bool = False):
+    def define_type(self, type_arg: Union[str, Iterable[str]], extensions_suported: Union[str, Iterable], overwrite: bool = False):
         """
         type_arg: string 'Codigos' ou lista de tipos ['Codigos','Imagens']
         extensions_suported: lista ou string que representa extensões
@@ -119,7 +121,7 @@ class Definer:
         else:
             tipos = [str(type_arg)]
 
-        exts = self._normalize_extensions_input(extensions_suported)
+        exts = self.normalize_extensions_input(extensions_suported)
 
         data_to_add: dict[str, list[str]] = {}
 
@@ -134,7 +136,7 @@ class Definer:
             for t in tipos:
                 data_to_add[t] = list(exts)
 
-        if self.escrever_extensoes(data_to_add, overwrite):
+        if self.write_extensions(data_to_add, overwrite):
             print(f"[Ryzor] extensões {data_to_add} adicionadas com sucesso")
         else:
             print("[Ryzor] Falha ao salvar extensões")
