@@ -7,6 +7,7 @@ try:
     util = Utils()
 
 except (ModuleNotFoundError, ImportError):
+    print("em remover")
     print(f"[Debug] Erro: Módulo utils não encontrado nos arquivos do ryzor, tente `ryzor repair`")
     print("[Debug] Cancelando...")
         

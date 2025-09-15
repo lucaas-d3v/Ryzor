@@ -6,4 +6,15 @@ authors = [{ name = "Lucas Paulino Da Silva", email = "lucas.workps@gmail.com" }
 dependencies = ["rich", "pyfiglet", "send2trash"]
 
 [project.scripts]
-ryzor = "cli:main"
+ryzor = "src.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+[tool.setuptools.package-dir]
+"" = "."
+
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"

@@ -3,7 +3,7 @@ def main():
     from pathlib import Path
     import sys
     import os
-# Adiciona o diretório src ao path
+    
     src_dir = Path(__file__).parent
     sys.path.insert(0, str(src_dir))
 
@@ -16,27 +16,28 @@ def main():
             quit()
 
     try:
-        from modules.utils import Utils
+        from modules.utils import Utils  # ← Removeu 'src.'
         utils = Utils()
 
     except (ModuleNotFoundError, ImportError):
         print("em cli")
         print(f"[Debug] Erro: Módulo 'utils' não encontrado nos arquivos do ryzor...")
-
         print("[Debug] Tente `ryzor repair`")
         print("[Debug] Cancelando...")
         quit()
 
     if utils.validate_modules():
-        from modules.logger import ConsoleManager
-        from modules.remover import DeletionManager  
-        from modules.definer import DefinitionManager
-        from modules.file_manager import FileController
-        from modules.lister_manager import Viewer
-        from modules.repair_manager import Restorer
+        from modules.logger import ConsoleManager           # ← Removeu 'src.'
+        from modules.remover import DeletionManager         # ← Removeu 'src.'
+        from modules.definer import DefinitionManager       # ← Removeu 'src.'
+        from modules.file_manager import FileController     # ← Removeu 'src.'
+        from modules.lister_manager import Viewer           # ← Removeu 'src.'
+        from modules.repair_manager import Restorer         # ← Removeu 'src.'
 
     else:
         quit()
+
+    # resto do código permanece igual...
 
     padrao = Path(".")
 
@@ -118,4 +119,3 @@ def main():
         case _:
             console_manager.show_help()
             
-main()
