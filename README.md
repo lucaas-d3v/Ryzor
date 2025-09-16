@@ -1,284 +1,378 @@
-![Logo do Ryzor](assets/Ryzor_Banner.png)
+![Logo do Ryzor](assets/Ryzor_Banner.png)  
 
 ---
 
-# Ryzor
+Ryzor
 
-Ryzor é uma ferramenta de **linha de comando (CLI)** para organização, backup e gerenciamento de arquivos por tipo/extensão. O projeto está em desenvolvimento e **não está pronto para uso em produção**.
+Ryzor is a command-line tool (CLI) for file organization, backup, and management by type/extension. The project is under development and not ready for production use.
 
----
-
-## Visão Geral
-
-- **Objetivo principal:** Automatizar a organização e backup de arquivos em diretórios, categorizando-os por tipos/extensões definidos pelo usuário.
-- **Funcionalidades atuais:**
-  - Definir e editar tipos de arquivos/extensões
-  - Organizar e realizar backup de arquivos entre diretórios
-  - Listar arquivos e extensões com modo recursivo
-  - Remover tipos/extensões com preview
-  - Reparar e restaurar configurações padrão
-  - Interface CLI rica com feedback visual usando Rich
-  - Barra de progresso e logs detalhados
-- **Persistência de dados:** Arquivos JSON (`extensions.json`) armazenam as definições de tipos e extensões.
 
 ---
 
-## Instalação
+Overview
 
-### Via pip (Recomendado)
-```bash
-# Clone o repositório
-git clone <repo-url>
+Main goal: Automate file organization and backup into directories, categorizing them by user-defined types/extensions.
+
+Current features:
+
+Define and edit file types/extensions
+
+Organize and back up files between directories
+
+List files and extensions with recursive mode
+
+Remove types/extensions with preview
+
+Repair and restore default settings
+
+Rich CLI interface with visual feedback using Rich
+
+Progress bar and detailed logs
+
+
+Data persistence: JSON files (extensions.json) store type and extension definitions.
+
+
+
+---
+
+Installation
+
+Via pip (Recommended)
+
+# Clone the repository
+git clone https://github.com/lucaas-d3v/Ryzor
 cd Ryzor
 
-# Instale as dependências
+# Install dependencies
 pip install -r requirements.txt
 
-# Instale o pacote
+# Install the package
 pip install .
 
-# Use diretamente o comando
+# Use the command directly
 ryzor help
-```
 
-### Instalação manual
-```bash
-# Instale apenas as dependências
+Manual installation
+
+# Install only dependencies
 pip install rich==13.9.4 pyfiglet==0.8.post1 send2trash==1.8.3
 
-# Execute via Python
-ryzor repair --dependences ou -dp
-```
+# Run via Python
+ryzor repair --dependences or -dp
+
 
 ---
 
-## Estrutura do Projeto
+Project Structure
 
-```
 .
-├── pyproject.toml           # Configuração do projeto e build
-├── requirements.txt         # Dependências
-├── README.md               # Documentação principal
+├── pyproject.toml           # Project and build configuration
+├── requirements.txt         # Dependencies
+├── README.md                # Main documentation
 ├── src/
-│   ├── cli.py              # Ponto de entrada CLI
-│   ├── t.py                # Script utilitário
+│   ├── cli.py               # CLI entry point
+│   ├── t.py                 # Utility script
 │   ├── modules/
-│   │   ├── definer.py      # Gerenciamento de definições
-│   │   ├── file_manager.py # Operações de arquivos
-│   │   ├── lister_manager.py # Listagem de arquivos
-│   │   ├── logger.py       # Interface e logging
-│   │   ├── remover.py      # Remoção de tipos/extensões
-│   │   ├── repair_manager.py # Restauração/reparo
-│   │   ├── utils.py        # Utilitários gerais
+│   │   ├── definer.py       # Type definitions management
+│   │   ├── file_manager.py  # File operations
+│   │   ├── lister_manager.py # File listing
+│   │   ├── logger.py        # Interface and logging
+│   │   ├── remover.py       # Type/extension removal
+│   │   ├── repair_manager.py # Restore/repair
+│   │   ├── utils.py         # General utilities
 │   │   └── data/
 │   │       └── extensions.json
 │   ├── data/
-│   │   └── extensions.json # Configurações de extensões
+│   │   └── extensions.json  # Extension configurations
 │   └── protected/
-│       └── extensions_default.json # Backup padrão
+│       └── extensions_default.json # Default backup
 └── tests/
-    └── generator.py        # Geração de arquivos de teste
-```
+    └── generator.py         # Test file generator
+
 
 ---
 
-## Comandos Disponíveis
+Available Commands
 
-### Organização de Arquivos
-```bash
-# Organizar arquivos por tipo
-ryzor organize -p ./meus_arquivos -d ./organizados
+File Organization
 
-# Organizar com modo recursivo
-ryzor organize -p ./origem -d ./destino --recursive
-```
+# Organize files by type
+ryzor organize -p ./my_files -d ./organized
 
-### Gerenciamento de Tipos/Extensões
-```bash
-# Definir novas extensões para um tipo
-ryzor define -t Imagens -exts .jpg .png .gif .webp
+# Organize with recursive mode
+ryzor organize -p ./source -d ./destination --recursive
 
-# Listar todas as extensões definidas
+Type/Extension Management
+
+# Define new extensions for a type
+ryzor define -t Images -exts .jpg .png .gif .webp
+
+# List all defined extensions
 ryzor list -e_exts
 
-# Listar arquivos em um diretório
-ryzor list -p ./meus_arquivos --verbose
+# List files in a directory
+ryzor list -p ./my_files --verbose
 
-# Remover extensões de um tipo
-ryzor remove -t Imagens -exts .gif
+# Remove extensions from a type
+ryzor remove -t Images -exts .gif
 
-# Remover tipo completo
-ryzor remove -t "Tipo Indesejado" --no-preview -y
-```
+# Remove entire type
+ryzor remove -t "Unwanted Type" --no-preview -y
 
-### Reparo e Manutenção
-```bash
-# Reparar módulos e configurações
+Repair and Maintenance
+
+# Repair modules and configurations
 ryzor repair
-```
+
 
 ---
 
-## Dependências Principais
+Main Dependencies
 
-### Runtime
-- **Python 3.11+** (obrigatório)
-- **[Rich 13.9.4](https://pypi.org/project/rich/)** - Interface visual rica no terminal
-- **[pyfiglet 0.8.post1](https://pypi.org/project/pyfiglet/)** - Geração de banners ASCII
-- **[send2trash 1.8.3](https://pypi.org/project/send2trash/)** - Envio seguro para lixeira
+Runtime
 
-### Build e Empacotamento
-- **setuptools** - Sistema de build
-- **wheel** - Criação de pacotes
+Python 3.11+ (required)
 
-### Bibliotecas Padrão Utilizadas
-- `pathlib`, `shutil`, `os` - Manipulação de arquivos e diretórios
-- `json` - Persistência de configurações
-- `argparse` - Parsing de argumentos CLI
-- `typing` - Tipagem estática
+Rich 13.9.4 - Rich terminal UI
+
+pyfiglet 0.8.post1 - ASCII banner generation
+
+send2trash 1.8.3 - Safe file deletion
+
+
+Build & Packaging
+
+setuptools - Build system
+
+wheel - Package creation
+
+
+Standard Libraries
+
+pathlib, shutil, os - File and directory handling
+
+json - Configuration persistence
+
+argparse - CLI argument parsing
+
+typing - Static typing
+
+
 
 ---
 
-## Configuração
+Configuration
 
-### Arquivo de Extensões (extensions.json)
-```json
+Extensions File (extensions.json)
+
 {
-  "Imagens": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"],
-  "Documentos": [".pdf", ".doc", ".docx", ".txt", ".rtf"],
-  "Vídeos": [".mp4", ".avi", ".mkv", ".mov", ".wmv"],
-  "Compactados": [".zip", ".rar", ".7z", ".tar.gz"]
+  "Images": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"],
+  "Documents": [".pdf", ".doc", ".docx", ".txt", ".rtf"],
+  "Videos": [".mp4", ".avi", ".mkv", ".mov", ".wmv"],
+  "Compressed": [".zip", ".rar", ".7z", ".tar.gz"]
 }
-```
 
-### Configuração de Build (pyproject.toml)
-O projeto inclui configuração completa para empacotamento via setuptools, com entrypoint configurado como `ryzor = src.cli:main`.
+Build Configuration (pyproject.toml)
+
+The project includes full packaging setup with setuptools, with entrypoint configured as ryzor = src.cli:main.
+
 
 ---
 
-## Testes
+Testing
 
-### Geração de Arquivos de Teste
-```bash
-# Execute o gerador de arquivos de teste
+Test File Generation
+
+# Run the test file generator
 python tests/generator.py
-```
 
-### Status de Testes
-- ⚠️ **Testes automatizados:** Não implementados
-- ✅ **Testes manuais:** Via generator.py
-- 🔄 **Roadmap:** Implementação de testes unitários e de integração planejada
+Test Status
 
----
+⚠️ Automated tests: Not implemented
 
-## Segurança e Limitações
+✅ Manual tests: Via generator.py
 
-### Considerações de Segurança
-- Sem autenticação ou controle de acesso
-- Dependências externas podem ter vulnerabilidades se desatualizadas
-- Operações de arquivo requerem permissões adequadas do sistema
+🔄 Roadmap: Unit and integration tests planned
 
-### Limitações Conhecidas
-- Falta de validação robusta de inputs do usuário
-- Sem tratamento avançado de erros para cenários extremos
-- Persistência limitada a arquivos JSON (não escalável para grandes volumes)
+
 
 ---
 
-## Troubleshooting
+Security & Limitations
 
-### Problemas Comuns
+Security Considerations
 
-**Módulos não encontrados:**
-```bash
+No authentication or access control
+
+External dependencies may have vulnerabilities if outdated
+
+File operations require proper system permissions
+
+
+Known Limitations
+
+Lacks robust user input validation
+
+No advanced error handling for edge cases
+
+Persistence limited to JSON files (not scalable for large datasets)
+
+
+
+---
+
+Troubleshooting
+
+Common Issues
+
+Modules not found:
+
 ryzor repair
-```
 
-**Dependências não instaladas:**
-```bash
+Dependencies not installed:
+
 pip install -r requirements.txt
 
-# ou
+# or
 
-ryzor repair --dependences ou -dp
-```
+ryzor repair --dependences or -dp
 
-**Erros de permissão:**
-- Execute como usuário com permissões adequadas
-- Verifique permissões de leitura/escrita nos diretórios
+Permission errors:
 
-**Arquivos de configuração corrompidos:**
-```bash
-ryzor repair --config ou -cfg
-```
+Run as a user with appropriate permissions
 
----
+Check read/write access to directories
 
-## Roadmap
 
-### Prioridade Alta
-1. ✅ **Implementar testes automatizados**
-2. ✅ **Melhorar validação de inputs do usuário**
-3. ✅ **Documentação externa completa**
+Corrupted configuration files:
 
-### Prioridade Média
-4. **Automatizar processo de deploy e CI/CD**
-5. **Suporte a plugins/extensões personalizadas**
-6. **Interface web complementar**
+ryzor repair --config or -cfg
 
-### Prioridade Baixa
-7. **Internacionalização (i18n)**
-8. **Integração com serviços de nuvem**
-9. **Modo daemon para monitoramento contínuo**
 
 ---
 
-## Contribuição
+Roadmap
 
-### Como Contribuir
-1. Fork o repositório
-2. Crie uma branch para sua feature (`git checkout -b feature/nova-funcionalidade`)
-3. Faça commit das suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/nova-funcionalidade`)
-5. Abra um Pull Request
+High Priority
 
-### Padrões de Código
-- Siga o padrão **PEP8** para formatação
-- Adicione testes para novas funcionalidades
-- Documente suas alterações adequadamente
-- Use type hints sempre que possível
+1. ✅ Implement automated tests
 
----
 
-## Status do Projeto
+2. ✅ Improve user input validation
 
-### Estado Atual
-- ⚠️ **Desenvolvimento ativo** - Versão intermediária funcional
-- ❌ **Não pronto para produção**
-- ✅ **Funcionalidades core implementadas**
-- ⚠️ **Falta de testes automatizados**
 
-### Estabilidade
-- **Core CLI:** Estável
-- **Operações de arquivo:** Estável com limitações
-- **Interface Rich:** Estável
-- **Configuração JSON:** Estável
+3. ✅ Complete external documentation
 
----
 
-## Licença
 
-Este projeto ainda não possui uma licença definida. Considere definir uma licença apropriada antes de releases públicas.
+Medium Priority
 
----
+4. Automate deploy and CI/CD pipeline
 
-## Suporte
 
-Para reportar bugs, solicitar features ou obter ajuda:
-- 📧 **Issues:** Use o sistema de issues do GitHub
-- 📖 **Documentação:** Consulte este README e a documentação técnica
-- 🔧 **Troubleshooting:** Consulte a seção de resolução de problemas acima
+5. Support for custom plugins/extensions
+
+
+6. Complementary web interface
+
+
+
+Low Priority
+
+7. Internationalization (i18n)
+
+
+8. Cloud service integration
+
+
+9. Daemon mode for continuous monitoring
+
+
+
 
 ---
 
-*Ryzor - Organize seus arquivos com estilo e eficiência.*
+Contribution
+
+How to Contribute
+
+1. Fork the repository
+
+
+2. Create a feature branch (git checkout -b feature/new-feature)
+
+
+3. Commit your changes (git commit -am 'Add new feature')
+
+
+4. Push to the branch (git push origin feature/new-feature)
+
+
+5. Open a Pull Request
+
+
+
+Code Standards
+
+Follow PEP8 style guidelines
+
+Add tests for new features
+
+Properly document your changes
+
+Use type hints whenever possible
+
+
+
+---
+
+Project Status
+
+Current State
+
+⚠️ Active development - Functional intermediate version
+
+❌ Not production-ready
+
+✅ Core features implemented
+
+⚠️ Lack of automated tests
+
+
+Stability
+
+Core CLI: Stable
+
+File operations: Stable with limitations
+
+Rich interface: Stable
+
+JSON configuration: Stable
+
+
+
+---
+
+License
+
+This project does not yet have a defined license. Consider adding one before public releases.
+
+
+---
+
+Support
+
+For bug reports, feature requests, or help:
+
+📧 Issues: Use GitHub Issues system
+
+📖 Documentation: Check this README and technical docs
+
+🔧 Troubleshooting: See the troubleshooting section above
+
+
+
+---
+
+Ryzor - Organize your files with style and efficiency.
