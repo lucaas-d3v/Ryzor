@@ -1,42 +1,42 @@
 ![Logo do Ryzor](assets/Ryzor_Banner.png)  
+  
+---
+
+###Ryzor
+
+Ryzor is a command-line (CLI) tool for organizing, backing up, and managing files by type/extension. The project is under development and is not ready for production use.
+
 
 ---
 
-Ryzor
+###Overview
 
-Ryzor is a command-line tool (CLI) for file organization, backup, and management by type/extension. The project is under development and not ready for production use.
-
-
----
-
-Overview
-
-Main goal: Automate file organization and backup into directories, categorizing them by user-defined types/extensions.
+Main goal: Automate organization and backup of files in directories, categorizing them by user-defined types/extensions.
 
 Current features:
 
 Define and edit file types/extensions
 
-Organize and back up files between directories
+Organize and perform backups of files between directories
 
 List files and extensions with recursive mode
 
 Remove types/extensions with preview
 
-Repair and restore default settings
+Repair and restore default configurations
 
 Rich CLI interface with visual feedback using Rich
 
 Progress bar and detailed logs
 
 
-Data persistence: JSON files (extensions.json) store type and extension definitions.
+Data persistence: JSON files (extensions.json) store the type and extension definitions.
 
 
 
 ---
 
-Installation
+###Installation
 
 Via pip (Recommended)
 
@@ -53,9 +53,9 @@ pip install .
 # Use the command directly
 ryzor help
 
-Manual installation
+###Manual installation
 
-# Install only dependencies
+# Install only the dependencies
 pip install rich==13.9.4 pyfiglet==0.8.post1 send2trash==1.8.3
 
 # Run via Python
@@ -64,7 +64,7 @@ ryzor repair --dependences or -dp
 
 ---
 
-Project Structure
+###Project Structure
 
 .
 ├── pyproject.toml           # Project and build configuration
@@ -74,26 +74,26 @@ Project Structure
 │   ├── cli.py               # CLI entry point
 │   ├── t.py                 # Utility script
 │   ├── modules/
-│   │   ├── definer.py       # Type definitions management
+│   │   ├── definer.py       # Definitions management
 │   │   ├── file_manager.py  # File operations
-│   │   ├── lister_manager.py # File listing
+│   │   ├── lister_manager.py# File listing
 │   │   ├── logger.py        # Interface and logging
-│   │   ├── remover.py       # Type/extension removal
-│   │   ├── repair_manager.py # Restore/repair
+│   │   ├── remover.py       # Remove types/extensions
+│   │   ├── repair_manager.py# Restore/repair
 │   │   ├── utils.py         # General utilities
 │   │   └── data/
 │   │       └── extensions.json
 │   ├── data/
-│   │   └── extensions.json  # Extension configurations
+│   │   └── extensions.json  # Extensions configurations
 │   └── protected/
 │       └── extensions_default.json # Default backup
 └── tests/
-    └── generator.py         # Test file generator
+    └── generator.py         # Test files generator
 
 
 ---
 
-Available Commands
+###Available Commands
 
 File Organization
 
@@ -103,7 +103,7 @@ ryzor organize -p ./my_files -d ./organized
 # Organize with recursive mode
 ryzor organize -p ./source -d ./destination --recursive
 
-Type/Extension Management
+Types/Extensions Management
 
 # Define new extensions for a type
 ryzor define -t Images -exts .jpg .png .gif .webp
@@ -128,29 +128,29 @@ ryzor repair
 
 ---
 
-Main Dependencies
+###Main Dependencies
 
 Runtime
 
 Python 3.11+ (required)
 
-Rich 13.9.4 - Rich terminal UI
+Rich 13.9.4 - Rich terminal interface
 
 pyfiglet 0.8.post1 - ASCII banner generation
 
-send2trash 1.8.3 - Safe file deletion
+send2trash 1.8.3 - Safe move to trash
 
 
-Build & Packaging
+###Build and Packaging
 
 setuptools - Build system
 
 wheel - Package creation
 
 
-Standard Libraries
+###Standard Libraries Used
 
-pathlib, shutil, os - File and directory handling
+pathlib, shutil, os - File and directory manipulation
 
 json - Configuration persistence
 
@@ -162,7 +162,7 @@ typing - Static typing
 
 ---
 
-Configuration
+###Configuration
 
 Extensions File (extensions.json)
 
@@ -170,21 +170,21 @@ Extensions File (extensions.json)
   "Images": [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"],
   "Documents": [".pdf", ".doc", ".docx", ".txt", ".rtf"],
   "Videos": [".mp4", ".avi", ".mkv", ".mov", ".wmv"],
-  "Compressed": [".zip", ".rar", ".7z", ".tar.gz"]
+  "Archives": [".zip", ".rar", ".7z", ".tar.gz"]
 }
 
 Build Configuration (pyproject.toml)
 
-The project includes full packaging setup with setuptools, with entrypoint configured as ryzor = src.cli:main.
+The project includes a full configuration for packaging via setuptools, with entrypoint configured as ryzor = src.cli:main.
 
 
 ---
 
-Testing
+###Tests
 
-Test File Generation
+Test Files Generation
 
-# Run the test file generator
+# Run the test files generator
 python tests/generator.py
 
 Test Status
@@ -199,7 +199,7 @@ Test Status
 
 ---
 
-Security & Limitations
+Security and Limitations
 
 Security Considerations
 
@@ -207,26 +207,26 @@ No authentication or access control
 
 External dependencies may have vulnerabilities if outdated
 
-File operations require proper system permissions
+File operations require appropriate system permissions
 
 
 Known Limitations
 
-Lacks robust user input validation
+Lack of robust validation for user inputs
 
-No advanced error handling for edge cases
+No advanced error handling for extreme scenarios
 
-Persistence limited to JSON files (not scalable for large datasets)
+Persistence limited to JSON files (not scalable for large volumes)
 
 
 
 ---
 
-Troubleshooting
+###Troubleshooting
 
 Common Issues
 
-Modules not found:
+Module not found:
 
 ryzor repair
 
@@ -242,7 +242,7 @@ Permission errors:
 
 Run as a user with appropriate permissions
 
-Check read/write access to directories
+Check read/write permissions on directories
 
 
 Corrupted configuration files:
@@ -252,7 +252,7 @@ ryzor repair --config or -cfg
 
 ---
 
-Roadmap
+###Roadmap
 
 High Priority
 
@@ -266,9 +266,9 @@ High Priority
 
 
 
-Medium Priority
+###Medium Priority
 
-4. Automate deploy and CI/CD pipeline
+4. Automate deploy and CI/CD process
 
 
 5. Support for custom plugins/extensions
@@ -278,12 +278,12 @@ Medium Priority
 
 
 
-Low Priority
+###Low Priority
 
 7. Internationalization (i18n)
 
 
-8. Cloud service integration
+8. Integration with cloud services
 
 
 9. Daemon mode for continuous monitoring
@@ -293,17 +293,17 @@ Low Priority
 
 ---
 
-Contribution
+###Contribution
 
 How to Contribute
 
 1. Fork the repository
 
 
-2. Create a feature branch (git checkout -b feature/new-feature)
+2. Create a branch for your feature (git checkout -b feature/new-feature)
 
 
-3. Commit your changes (git commit -am 'Add new feature')
+3. Commit your changes (git commit -am 'Adds new feature')
 
 
 4. Push to the branch (git push origin feature/new-feature)
@@ -315,11 +315,11 @@ How to Contribute
 
 Code Standards
 
-Follow PEP8 style guidelines
+Follow PEP8 formatting
 
 Add tests for new features
 
-Properly document your changes
+Document your changes properly
 
 Use type hints whenever possible
 
@@ -327,20 +327,20 @@ Use type hints whenever possible
 
 ---
 
-Project Status
+###Project Status
 
 Current State
 
-⚠️ Active development - Functional intermediate version
+⚠️ Active development - Intermediate functional version
 
-❌ Not production-ready
+❌ Not production ready
 
 ✅ Core features implemented
 
 ⚠️ Lack of automated tests
 
 
-Stability
+###Stability
 
 Core CLI: Stable
 
@@ -354,20 +354,20 @@ JSON configuration: Stable
 
 ---
 
-License
+###License
 
-This project does not yet have a defined license. Consider adding one before public releases.
+This project does not currently have a defined license. Consider adding an appropriate license before public releases.
 
 
 ---
 
-Support
+###Support
 
-For bug reports, feature requests, or help:
+To report bugs, request features, or get help:
 
-📧 Issues: Use GitHub Issues system
+📧 Issues: Use the GitHub issues system
 
-📖 Documentation: Check this README and technical docs
+📖 Documentation: Refer to this README and technical docs
 
 🔧 Troubleshooting: See the troubleshooting section above
 
@@ -375,4 +375,5 @@ For bug reports, feature requests, or help:
 
 ---
 
-Ryzor - Organize your files with style and efficiency.
+Ryzor — Organize your files with style and efficiency.
+
