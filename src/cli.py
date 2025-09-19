@@ -12,7 +12,7 @@ def main():
         console = Console()
 
     except (ModuleNotFoundError, ImportError) as e:
-            print("[Ryzor] Parece que o rich não está instalado em seu sistema, tente `ryzor repair`")
+            print("[Ryzor] It seems that 'rich' is not installed on your system, try `ryzor repair`")
             quit()
 
     try:
@@ -20,10 +20,10 @@ def main():
         utils = Utils()
 
     except (ModuleNotFoundError, ImportError):
-        print("em cli")
-        print(f"[Debug] Erro: Módulo 'utils' não encontrado nos arquivos do ryzor...")
-        print("[Debug] Tente `ryzor repair`")
-        print("[Debug] Cancelando...")
+        print("in cli")
+        print(f"[Debug] Error: Module 'utils' not found in ryzor files...")
+        print("[Debug] Try `ryzor repair`")
+        print("[Debug] Cancelling...")
         quit()
 
     if utils.validate_modules():
@@ -39,7 +39,7 @@ def main():
 
     # resto do código permanece igual...
 
-    padrao = Path(".")
+    padrao = Path.cwd()
 
     console_manager = ConsoleManager()
     deletion_managerver = DeletionManager()
@@ -118,4 +118,3 @@ def main():
 
         case _:
             console_manager.show_help()
-            

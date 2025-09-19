@@ -98,10 +98,10 @@ class DefinitionManager:
             return True
 
         except PermissionError as e:
-            print(f"[Ryzor] Erro de permissão: {e}")
+            print(f"[Ryzor] Permission error: {e}")
             return False
         except Exception as e:
-            print(f"[Ryzor] Erro inesperado ao escrever JSON: {e}")
+            print(f"[Ryzor] Unexpected error writing JSON: {e}")
             return False
 
 
@@ -137,6 +137,6 @@ class DefinitionManager:
                 data_to_add[t] = list(exts)
 
         if self.write_extensions(data_to_add, overwrite):
-            print(f"[Ryzor] extensões {data_to_add} adicionadas com sucesso")
+            print(f"[Ryzor] extensions {data_to_add} added successfully")
         else:
-            print("[Ryzor] Falha ao salvar extensões")
+            print("[Ryzor] Failed to save extensions")

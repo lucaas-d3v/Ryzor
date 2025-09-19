@@ -1,4 +1,4 @@
-"""Arquivo responsável por gerenciar o comando 'list' """
+"""File responsible for managing the 'list' command"""
 
 import sys
 import os
@@ -12,14 +12,15 @@ try:
     utils = Utils()
 
 except (ModuleNotFoundError, ImportError):
-    print("em lister_manager")
-    print(f"[Debug] Erro: Módulo utils não encontrado nos arquivos do ryzor, tente `ryzor repair`")
-    print("[Debug] Cancelando...")
+    print("in lister_manager")
+    print(f"[Debug] Error: utils module not found in Ryzor files, try `ryzor repair`")
+    print("[Debug] Cancelling...")
         
     quit() 
 
 if utils.validate_modules():
     from .definer import DefinitionManager
+    from .logger import ConsoleManager
 
 else:
     quit()
@@ -27,25 +28,25 @@ else:
 class Viewer:
     def __init__(self):
         self.definer = DefinitionManager()
+        self.loger = ConsoleManager()
 
     def show_files(self, conteudo: list[Path], verbose: bool = False):
         for content in conteudo:
-            tipo = "Arquivo" if content.is_file() else "Diretório" if content.is_dir() else "Outro"
+            tipo = "File" if content.is_file() else "Directory" if content.is_dir() else "Other"
             info = content.resolve() if verbose else content.name
-            print(f"[Ryzor] {info} - Tipo: {tipo}")
+            self.loger.log(f"{info} - Type: {tipo}")
 
     def list_files(self, caminho: Path, recursive_mode: bool = False, verbose: bool = False):
         if not caminho.exists():
-            print("[Ryzor] Caminho não existe")
+            self.loger.log_error("Path does not exist")
             return
         
         if caminho.is_file():
-            print("[Ryzor] O caminho não pode ser um arquivo")
+            self.loger.log_error("[Ryzor] Path cannot be a file")
             return
 
         if recursive_mode:
             conteudo = list(caminho.rglob("*"))
-
         else:    
             conteudo = list(caminho.iterdir())
 

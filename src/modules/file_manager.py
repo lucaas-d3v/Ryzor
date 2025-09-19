@@ -13,8 +13,8 @@ try:
     utils = Utils()
 
 except (ModuleNotFoundError, ImportError):
-    print(f"[Debug] Erro: Módulo utils não encontrado nos arquivos do ryzor, tente `ryzor repair`")
-    print("[Debug] Cancelando...")
+    print(f"[Debug] Error: Utils module not found in ryzor files, try `ryzor repair`")
+    print("[Debug] Canceling...")
     quit()
 
 # valida se os módulos estão ok
@@ -30,6 +30,7 @@ class FileController:
     def __init__(self):
         self.sep = os.sep  # pega separador do sistema
         self.definer = DefinitionManager()
+        self.logger = ConsoleManager
 
     def rename(self, file: Path, qtd: list[int] = [0]) -> Path:
         stem = file.stem            # nome do arquivo sem extensão
@@ -41,7 +42,8 @@ class FileController:
         return file.with_name(new_name)
 
     def relocate_files(self, 
-            entrada: Path, saida: Path,
+            entrada: Path, 
+            saida: Path,
             backup: bool = False,
             no_preview: bool = False,
             verbose: bool = False,
@@ -67,8 +69,8 @@ class FileController:
             """
             Medida de segurança caso o diretório informado não exista.
             """
-            logger.log_error("O caminho de entrada não existe.")
-            logger.log_error("Cancelando")
+            self.logger.log_error("The input path does not exist.")
+            self.logger.log_error("Canceling")
 
             return False
 
@@ -76,7 +78,7 @@ class FileController:
             """
             Medida de segurança caso o caminho especificado não seja um diretório.
             """
-            logger.log_error("O caminho informado não pode ser um arquivo.")
+            self.logger.log_error("The specified path cannot be a file.")
 
             return False
 
@@ -85,24 +87,24 @@ class FileController:
             Medida de segurança caso a saida não exista.
             """
 
-            logger.log("O caminho de saida não existe.", code=9, debug=True)
-            logger.log("Tentando Criar...", debug=True, code=10)
+            self.logger.log("The output path does not exist.", code=9, debug=True)
+            self.logger.log("Trying to create...", debug=True, code=10)
             
             try:
-
                 saida.mkdir(parents=True, exist_ok=True)
-                logger.log("Caminho de saída criado com sucesso.", code=11)
-                logger.log("Continuando...", code=11)
+                self.logger.log("Output path created successfully.", code=11)
+                self.logger.log("Continuing...", code=11)
 
             except PermissionError:
-                logger.log_error(f"Erro, o Ryzor não tem permissão para atuar em {saida}")
+                print(saida)
+                self.logger.log_error(f"Ryzor does not have permission to act on {saida}")
                 return False
             
         if not saida.is_dir():
             """
             Medida de segurança, caso a saida não seja um diretório.
             """        
-            logger.log_error("O caminho informado não pode ser um arquivo.")
+            self.self.logger.log_error("The specified path cannot be a file.")
 
             return False
 
@@ -120,28 +122,28 @@ class FileController:
                     yield arquivo.resolve(), contador  # Retorna arquivo e total atual
         
         # Chama a barra passando o generator como callback
-        arquivos = logger.barra_carregamento_com_callback(buscar_arquivos_generator, self.sep, verbose)
+        arquivos = self.logger.barra_carregamento_com_callback(buscar_arquivos_generator, self.sep, verbose)
         
         if arquivos is None:
-            logger.log_error("Não existem arquivos no caminho informado.")
+            self.logger.log_error("There are no files in the specified path.")
             
             return False
 
         try:
             arquivos_a_mudar = {}
-            logger.log("Carregando extensões...", code=10)
+            self.logger.log("Loading extensions...", code=10)
             
             try:
                 tipos_de_arquivos = self.definer.ler_extensoes()
-                logger.log("Extensões carregadas com sucesso.", code=11)
+                self.logger.log("Extensions loaded successfully.", code=11)
             
             except (FileNotFoundError, json.JSONDecodeError) as e:
-                logger.log_error(f"Erro ao carregar as extensões: {e}", True)
+                self.logger.log_error(f"Error loading extensions: {e}", True)
 
                 return False
             
             if not isinstance(tipos_de_arquivos, dict):
-                logger.log_error("As extensões não são um dicionário válido", True)
+                self.logger.log_error("Extensions are not a valid dictionary", True)
     
                 return False
             
@@ -157,32 +159,19 @@ class FileController:
                         break
 
                 else:
-                    pasta_destino = Path(f"{saida}/Sem_Extensões")
+                    pasta_destino = Path(f"{saida}/No_Extensions")
 
                 destino = pasta_destino / arquivo.name
 
                 arquivos_a_mudar[str(arquivo)] = str(destino)
             
-            logger.log_mudancas(arquivos_a_mudar, self.sep, verbose=verbose, backup=backup)
+            self.logger.log_changes(arquivos_a_mudar, self.sep, verbose=verbose, backup=backup)
 
             
             if utils.continue_action(y=y):
-                try:
-                    from src.modules.logger import barra_progresso
-
-                except (ModuleNotFoundError, ImportError):
-                    logger.log_error("Erro: O módulo logger não encontrado nos arquivos do ryzor",True)
-                    logger.log_error("Cancelando...")
-
-                    return False
-
-                barra_progresso(arquivos_a_mudar, backup=backup)
+                self.logger.log_changes(arquivos_a_mudar, backup=backup)
                 return True
             
-            else:
-                logger.log("Cancelando...", code=10)
-                return False
-
         except PermissionError:
-            logger.log(f"Erro: O Ryzor não tem permissão para atuar em {saida}", debug=True, code=9)
+            self.logger.log(f"Error: Ryzor does not have permission to act on {saida}", debug=True, code=9)
             return False

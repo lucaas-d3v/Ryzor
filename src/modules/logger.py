@@ -1,4 +1,4 @@
-"""Arquivo responsável pelas informações do terminal"""                                                         
+"""File responsible for terminal information"""
 
 try:
     from rich import box                                    
@@ -11,16 +11,15 @@ try:
     from rich.align import Align                            
     from rich.progress import SpinnerColumn, BarColumn      
     from rich.theme import Theme
+    from rich.text import Text
 
 except (ModuleNotFoundError, ImportError):
-    print(f"[Debug] Erro: Módulo Rich não encontrado nos arquivos do ryzor, tente `ryzor repair`")
-    print("[Debug] Cancelando...")
-        
+    print(f"[Debug] Error: Rich module not found in Ryzor files, try `ryzor repair`")
+    print("[Debug] Cancelling...")
     quit() 
 
 from pathlib import Path                                
 import time
-
 import pyfiglet
 import sys
 import select
@@ -31,22 +30,23 @@ import contextlib
 class ConsoleManager:
     def __init__(self):
         self.ryzor_theme = Theme({
-            "logo":       "#FFFCDB bold",   #1
-            "normal":     "#FFFCDB",      #2
-            "normal 2":   "#FFFCDB bold",   #3
-            "primary":    "#00FF84 bold",   #4
-            "secondary":  "#00CFFF bold",   #6
-            "background": "on #7F001F",     #7
-            "text":       "#FFFCDB",      #8
-            "muted":      "#CFC7B8",      #9
-            "accent":     "#28F0D5",      #10
-            "error":      "#FF3B5C bold",   #11
-            "warning":    "#FFC107 bold",   #12
-            "success":    "#00FF84"       #13
+            "logo":       "#FFFCDB bold",  
+            "normal":     "#FFFCDB",      
+            "normal 2":   "#FFFCDB bold",   
+            "primary":    "#00FF84 bold",   
+            "secondary":  "#00CFFF bold",   
+            "background": "on #7F001F",     
+            "text":       "#FFFCDB",      
+            "muted":      "#CFC7B8",      
+            "accent":     "#28F0D5",      
+            "error":      "#FF3B5C bold",   
+            "warning":    "#FFC107 bold",   
+            "success":    "#00FF84"       
         })
 
+        self.version_ = "0.2.9"
+
         self.keys = list(self.ryzor_theme.styles.keys())
-        
         self.console = Console(theme=self.ryzor_theme)
 
     def logo(self):
@@ -62,10 +62,10 @@ class ConsoleManager:
             term_width = self.console.size.width
             left_pad = max((term_width - block_width) // 2, 0)
             for line in lines:
-                self.console.print(" " * left_pad + f"[logo]{line.rstrip()}[/]")
+                self.console.print(Text(" " * left_pad + line.rstrip(), style="logo"))
+
 
         print()
-
         self.console.rule(style="error")
 
         version_table = Table(
@@ -78,155 +78,136 @@ class ConsoleManager:
             padding=(0,1),
         )
         version_table.add_row("[normal]By:[/] [primary]~K'[/]")
-        version_table.add_row("[#FFC107]Version: 0.2.5[/]")
-
+        # usei o estilo do theme em vez de hex hardcoded
+        version_table.add_row(f"[warning]Version: {self.version_}[/]")
 
         self.console.print(version_table, justify="center")
         self.console.print()
-
         self.console.rule(style="error")
 
     def show_help(self):
-        ascii_logo = self.logo().rstrip("\n")
-
+        ascii_banner = self.logo()
+        ascii_logo = ascii_banner.rstrip("\n")
         lines = ascii_logo.splitlines()
+        
         if lines:
             block_width = max(len(line) for line in lines)
             term_width = self.console.size.width
             left_pad = max((term_width - block_width) // 2, 0)
             for line in lines:
-                self.console.print(" " * left_pad + line.rstrip(), style="primary")
+                self.console.print(Text(" " * left_pad + line.rstrip(), style="logo"))
 
-        self.console.print()
 
-        # tabela com linhas horizontais entre cada entrada
-        comandos = Table(
-            title="Comandos",
+        print()
+
+        commands = Table(
+            title="Commands",
             style="primary",
             title_justify="center",
-            show_lines=True,       # desenha linha horizontal entre as linhas
+            show_lines=True,       
             expand=False,
-            box=box.SQUARE,        # experimente box.SIMPLE, box.SQUARE ou box.SIMPLE_HEAVY
+            box=box.SQUARE,        
             padding=(0,1),
+            border_style="error"
         )
 
-        comandos.add_column("Comando", style="secondary", no_wrap=True, justify="left")
-        comandos.add_column("Uso", style="warning", justify="left")
-        comandos.add_column("Descrição", style="primary", justify="left")
+        commands.add_column("Command", style="secondary", no_wrap=True, justify="left")
+        commands.add_column("Usage", style="warning", justify="left")
+        commands.add_column("Description", style="primary", justify="left")
 
-        comandos.add_row("organize", "ryzor organize -p <origem> -d <destino>", "Apenas organiza os arquivos do caminho passado (padrao = diretório atual).")
-        comandos.add_row("backup",   "ryzor backup -p <origem> -d <destino>", "Faz o backup e organiza os arquivos do caminho passado (padrao = diretório atual).")
-        comandos.add_row("list",     "ryzor list -e_exts", "Lista arquivos ou tipos de arquivos e extensões suportadas se usar -e_exts (padrao = diretório atual).")
-        comandos.add_row("define",   "ryzor define -t <tipo> -exts <extensões>", "Define um novo tipo de arquivo e extensões suportadas.")
-        comandos.add_row("remove",   "ryzor remove -t <tipo> -exts <extensões>", "Remove o tipo todo ou extensões específicas (se não passar extensoes, o tipo sera removido).")
-        comandos.add_row("version",  "ryzor version",                        "Informa a versão atual do Ryzor.")
-        comandos.add_row("repair",   "ryzor repair",                         "Restaura o Ryzor para versão de fábrica.")
-        comandos.add_row("help",     "ryzor help",                           "Mostra este menu de ajuda.")
+        commands.add_row("organize", "ryzor organize -p <source> -d <dest>", "Organizes the files in the given path (default = current directory).")
+        commands.add_row("backup",   "ryzor backup -p <source> -d <dest>", "Backs up and organizes files in the given path (default = current directory).")
+        commands.add_row("list",     "ryzor list -e_exts", "Lists files or supported file types and extensions if -e_exts is used (default = current directory).")
+        commands.add_row("define",   "ryzor define -t <type> -exts <extensions>", "Defines a new file type and supported extensions.")
+        commands.add_row("remove",   "ryzor remove -t <type> -exts <extensions>", "Removes the entire type or specific extensions (if no extensions passed, type will be removed).")
+        commands.add_row("version",  "ryzor version",                        "Displays the current Ryzor version.")
+        commands.add_row("repair",   "ryzor repair",                         "Restores Ryzor to factory version.")
+        commands.add_row("help",     "ryzor help",                           "Displays this help menu.")
 
-        self.console.print(comandos, justify="center")
+        self.console.print(commands, justify="center")
         self.console.print()
 
-    def help_log(self, mensagem: str) -> str:
+    def help_log(self, message: str) -> str:
         """
-        Formata mensagem de ajuda para o argparse.
-        IMPORTANTE: Esta função deve RETORNAR a string, não imprimir!
+        Formats help message for argparse.
+        IMPORTANT: Must RETURN string, do not print!
         """
-        msg = mensagem.split(" ")
-
+        msg = message.split(" ")
         _msg = "[primary][Help][/] [warning]"
-
-        for palavra in msg:
-            if palavra == "->":
-                _msg += f"[primary]{palavra}[/] [normal 2]"
+        for word in msg:
+            if word == "->":
+                _msg += f"[primary]{word}[/] [normal 2]"
             else:
-                _msg += f"{palavra} "
+                _msg += f"{word} "
         else:
             _msg += "[/][/]"
 
         return _msg
 
-    def log_mudancas(self, mudancas: dict[str, str], sep: str, backup: bool, verbose: bool = False):
-        mudancas_table = Table(
-            title="[primary]Mudanças[/]",
+    def log_changes(self, changes: dict[str, str], sep: str, backup: bool, verbose: bool = False):
+        changes_table = Table(
+            title="[primary]Changes[/]",
             style="primary",
             title_justify="center",
-            show_lines=True,       # desenha linha horizontal entre as linhas
+            show_lines=True,       
             expand=False,
-            box=box.SQUARE,        # experimente box.SIMPLE, box.SQUARE ou box.SIMPLE_HEAVY
+            box=box.SQUARE,        
             padding=(0,1)
         )
 
         self.console.rule(
-        f"[warning]Modo:[/] {'Backup' if backup else 'Organização'}\n"
+        f"[warning]Mode:[/] {'Backup' if backup else 'Organization'}\n"
         f"[warning]Verbose:[/] {'on' if verbose else 'off'}\n"
-        f"[warning]Total de modificações:[/] {len(mudancas)}"
+        f"[warning]Total changes:[/] {len(changes)}"
     )
 
-        mudancas_table.add_column("Origem", style="secondary", no_wrap=True, justify="left")
-        mudancas_table.add_column("Destino", style="warning", justify="left")
-        mudancas_table.add_column("Tipo", style="primary", justify="left")
+        changes_table.add_column("Source", style="secondary", no_wrap=True, justify="left")
+        changes_table.add_column("Destination", style="warning", justify="left")
+        changes_table.add_column("Type", style="primary", justify="left")
 
+        for source, destination in changes.items():
+            typ = Path(source)
+            source = self.summary_path(source, sep, verbose=verbose)
+            destination = self.summary_path(destination, sep, verbose)
+            changes_table.add_row(source, destination, f"{'File' if typ.is_file() else 'Directory' if typ.is_dir() else 'Not specified'}")
 
-        for origem, destino in mudancas.items():
-            tipo = Path(origem)
-
-            origem = self.resumo_pasta(origem, sep, verbose=verbose)
-            destino = self.resumo_pasta(destino, sep, verbose)
-
-
-            mudancas_table.add_row(origem, destino, f"{'Arquivo' if tipo.is_file() else 'Diretório' if tipo.is_dir() else 'Não específicado'}")
-
-        self.console.print(mudancas_table, justify="center")
+        self.console.print(changes_table, justify="center")
         self.console.print()
 
-    def log_error(self, mensagem, repair: bool = False, cancel: bool = True):
-        inicio = "[Erro]"
-
-        mensagem = f"[error]{inicio} {mensagem}[/]"
-
+    def log_error(self, message, repair: bool = False, cancel: bool = True):
+        start = "[Error]"
+        message = f"[error]{start} {message}[/]"
         if repair:
-            mensagem += ", tente `ryzor repair`."
-
-        self.console.print(mensagem)
-
+            message += ", try `ryzor repair`."
+        self.console.print(message)
         if cancel:
-            self.console.print(f"{inicio} [error]Cancelando...[/]")
+            self.console.print(f"{start} [error]Cancelling...[/]")
 
+    def log(self, message: str, debug: bool = False, code: int = 1, end: str = "\n") -> None:
+        start = "[warning][Debug][/]" if (debug or code == 9) else "[primary][Ryzor][/]"
+        message = f"{start} [{self.keys[code - 1]}]{message}[/]" if code != 0 else message
+        self.console.print(f"{message}", end=end, justify="center")
 
-    def log(self, mensagem: str, debug: bool = False, code: int = 1, end: str = "\n") -> None:
+    # All progress bar / callback functions have log messages translated to English
+    def progress_bar(self, changes: dict[str, str], backup=True):
         """
-        args:
-            mensagem: mensagem a ser escrita no terminal.
-            debug: ativa o modo [Debug].
-            code: codigo referente ao tipo de mensage, escrita
-        """
-
-        inicio = "[warning][Debug][/]" if (debug or code == 9) else "[primary][Ryzor][/]"
-        mensagem = f"{inicio} [{self.keys[code - 1]}]{mensagem}[/]" if code != 0 else mensagem
-
-        self.console.print(f"{mensagem}", end=end, justify="center")
-
-    def progress_bar(self, mudancas: dict[str, str], backup=True):
-        """
-        Cria barra de progresso Rich centralizada e executa arquivos via callback.
+        Creates a Rich progress bar and executes files via callback.
         """
 
         from .utils import execute
 
-        if not mudancas:
-            self.log("Nenhum arquivo para processar", code=10)
+        if not changes:
+            self.log("No files to process", code=10)
             return False
 
-        total = len(mudancas)
-        self.log(f"Iniciando {'backup' if backup else 'organização'} de {total} arquivos...", code=11)
-
-        # montar o Progress (não como context manager)
+        total = len(changes)
+        self.log(f"Starting {'backup' if backup else 'organization'} of {total} files...", code=11)
 
         try:
             progress = Progress(
                 SpinnerColumn(style="accent"),
-                TextColumn("[primary]{task.fields[acao]}[/primary]", justify="center"),
-                TextColumn("[muted]{task.fields[nome_arquivo]}[/muted]", justify="center"),
+                TextColumn("[primary]{task.fields[action]}[/primary]", justify="center"),
+                TextColumn("[muted]{task.fields[file_name]}[/muted]", justify="center"),
                 BarColumn(bar_width=None, style="success", complete_style="primary"),
                 TextColumn("[success]{task.percentage:>3.0f}%[/success]", justify="center"),
                 TimeRemainingColumn(),
@@ -234,64 +215,57 @@ class ConsoleManager:
                 transient=False,
             )
 
-            # Live + Align centralizam todo o render do Progress
             with Live(Align(progress, "center"), refresh_per_second=10, console=self.console):
                 progress.start()
                 task = progress.add_task(
                     "",
                     total=total,
-                    nome_arquivo="Preparando...",
-                    acao="Iniciando"
+                    file_name="Preparing...",
+                    action="Starting"
                 )
 
-                # Callback que será passado para execute()
-                def atualizar(self, **kwargs):
+                def update(self, **kwargs):
                     progress.update(
                         task,
-                        completed=kwargs.get("atual", 0),
-                        nome_arquivo=kwargs.get("nome_arquivo", ""),
-                        acao=kwargs.get("acao", ""),
-                        erro=kwargs.get("erro", False)
+                        completed=kwargs.get("current", 0),
+                        file_name=kwargs.get("file_name", ""),
+                        action=kwargs.get("action", ""),
+                        error=kwargs.get("error", False)
                     )
 
                 try:
-                    # Chamada para execute com o callback
-                    sucesso = execute(mudancas, callback=atualizar, backup=backup)
+                    success = execute(changes, callback=update, backup=backup)
 
-                    if sucesso[0]:
-                        self.log("Operação concluída com sucesso!", code=11)
-                    
+                    if success[0]:
+                        self.log("Operation completed successfully!", code=11)
                     else:
-                        self.log_error(f"Erro em execute: {sucesso[1]}")
-                        self.log_error("Cancelando...")
+                        self.log_error(f"Error in execute: {success[1]}")
+                        self.log_error("Cancelling...")
 
                 except KeyboardInterrupt:
-                    # garante parada limpa se Ctrl+C
                     progress.stop()
-                    self.log("Operação interrompida pelo usuário (Ctrl+C).", code=10)
+                    self.log("Operation interrupted by user (Ctrl+C).", code=10)
                     return False
                 except Exception as e:
                     progress.stop()
-                    self.log(f"Erro durante operação: {e}", code=9)
+                    self.log(f"Error during operation: {e}", code=9)
                     return False
                 finally:
-                    # sempre para o progress antes de sair do Live
                     progress.stop()
 
-            return sucesso
-
+            return success
 
         except Exception as e:
-            self.log(f"Erro na barra de progresso: {e}", code=9)
+            self.log(f"Error in progress bar: {e}", code=9)
             return False
 
-
+    # Terminal input helpers
     @contextlib.contextmanager
-    def stdin_cbreak(self, ):
+    def stdin_cbreak(self):
         """
-        Context manager que coloca o terminal em modo cbreak (caractere-a-caractere)
-        e restaura as flags originais ao sair.
-        Só funciona em Unix-like (ok pro seu Debian).
+        Context manager that puts terminal in cbreak mode (char-by-char)
+        and restores original flags on exit.
+        Only works on Unix-like systems (ok for Debian).
         """
         fd = sys.stdin.fileno()
         old_attrs = termios.tcgetattr(fd)
@@ -301,28 +275,24 @@ class ConsoleManager:
         finally:
             termios.tcsetattr(fd, termios.TCSADRAIN, old_attrs)
 
-
-    def tecla_pressionada(self, tecla="q") -> bool:
+    def key_pressed(self, key="q") -> bool:
         """
-        Checa sem bloqueio se uma tecla foi pressionada.
-        Retorna True se a tecla (único caractere) corresponde.
-        Deve ser usada enquanto o terminal estiver em cbreak (veja stdin_cbreak).
+        Non-blocking check if a key was pressed.
+        Returns True if the single character matches.
+        Must be used while terminal is in cbreak mode (see stdin_cbreak).
         """
         dr, _, _ = select.select([sys.stdin], [], [], 0)
         if dr:
             ch = sys.stdin.read(1)
-            return ch.lower() == tecla.lower()
+            return ch.lower() == key.lower()
         return False
 
-    from pathlib import Path
-
-    def resumo_pasta(self, arquivo, sep="/", verbose=False):
-        # normaliza arquivo (Path ou ".")
-        path = Path.cwd() if arquivo == "." else Path(arquivo)
+    def summary_path(self, path, sep="/", verbose=False):
+        # normalize path (Path or ".")
+        path = Path.cwd() if path == "." else Path(path)
         path = path.resolve()
 
         if verbose:
-            # caminho completo
             return str(path)
         else:
             parts = path.parts
@@ -330,148 +300,142 @@ class ConsoleManager:
                 return sep.join(parts)
             return sep.join(parts[-2:])
 
+def loading_bar_with_callback(self, callback_search, sep="/", verbose=False):
+    """
+    Progress bar that executes a callback function to search for files.
+    Now allows interruption with 'q' (without Enter) or Ctrl+C.
+    """
+    found_files = []
 
-    def loading_bar_with_callback(self, callback_busca, sep, verbose = False):
-        """
-        Barra de progresso que executa uma função callback para buscar arquivos.
-        Agora permite interromper com 'q' (sem Enter) ou com Ctrl+C.
-        """
-        arquivos_encontrados = []
+    try:
+        # Enable cbreak mode only during progress bar execution
+        with self.stdin_cbreak():
+            with Progress(
+                SpinnerColumn(style="accent"),
+                TextColumn("[accent]Loading files[/accent]"),
+                TextColumn("[primary]{task.fields[counter]}[/primary]"),
+                TextColumn("[muted]{task.fields[folder]}[/muted]"),
+                TimeElapsedColumn(),
+                console=self.console,
+            ) as progress:
+
+                task = progress.add_task(
+                    "",
+                    counter="0 files found... ('q' to quit)",
+                    folder="Starting..."
+                )
+
+                try:
+                    # Execute the callback that performs the actual search
+                    for file, total in callback_search():
+                        # Check key press without blocking
+                        if self.key_pressed("q"):
+                            progress.stop()
+                            self.log("Search interrupted by user (key 'q')...", code=10)
+                            return
+
+                        found_files.append(file)
+                        folder = self.summary_path(file, sep=sep, verbose=verbose)
+
+                        progress.update(
+                            task,
+                            counter=f"{total} files found...",
+                            folder=folder
+                        )
+
+                except KeyboardInterrupt:
+                    progress.stop()
+                    self.log("Search interrupted by user...", code=10)
+
+                except Exception as e:
+                    progress.stop()
+                    self.log(f"Error during loading: {e}", code=9)
+
+    except KeyboardInterrupt:
+        self.log("Search interrupted by user (Ctrl+C).", code=10)
+        return
+
+    except Exception as e:
+        self.log(f"Unexpected error: {e}", code=9)
+        return
+
+    return found_files
+
+
+def simple_loading_bar_callback(self, callback_search):
+    """
+    Simpler version of the progress bar with callback.
+    """
+    found_files = []
+
+    with Progress(
+        SpinnerColumn(style="accent"),
+        TextColumn("[accent bold]Discovering files...[/accent bold]"),
+        TextColumn("[primary]{task.fields[status]}[/primary]"),
+        console=self.console,
+    ) as progress:
+
+        task = progress.add_task("", status=" 0")
 
         try:
-            # ativa modo cbreak só durante a execução da barra
-            with self.stdin_cbreak():
-                with Progress(
-                    SpinnerColumn(style="accent"),
-                    TextColumn("[accent]Carregando arquivos[/accent]"),
-                    TextColumn("[primary]{task.fields[contador]}[/primary]"),
-                    TextColumn("[muted]{task.fields[pasta]}[/muted]"),
-                    TimeElapsedColumn(),
-                    console=self.console,
-                ) as progress:
+            for file, total in callback_search():
+                found_files.append(file)
 
-                    task = progress.add_task(
-                        "",
-                        contador="0 arquivos encontrados... ('q' para sair)",
-                        pasta="Iniciando..."
-                    )
+                # Update every 10 files for better performance
+                if total % 10 == 0:
+                    progress.update(task, status=f" {total}")
 
-                    try:
-                        # Executa o callback que faz a busca real
-                        for arquivo, total in callback_busca():
-                            # checa tecla sem bloquear
-                            if self.tecla_pressionada("q"):
-                                progress.stop()
-                                self.log("Busca interrompida pelo usuário (tecla 'q')...", code=10)
-                                return
-
-                            arquivos_encontrados.append(arquivo)
-
-                            arquivo_ = Path(arquivo)
-
-                            pasta = self.resumo_pasta(arquivo, sep=sep, verbose=verbose)
-
-                            progress.update(
-                                task,
-                                contador=f"{total} arquivos encontrados...",
-                                pasta=pasta
-                            )
-
-                    except KeyboardInterrupt:
-                        # Ctrl+C
-                        progress.stop()
-                        self.log("Busca interrompida pelo usuário...", code=10)
-
-                    except Exception as e:
-                        progress.stop()
-                        self.log(f"Erro durante carregamento: {e}", code=9)
-
-        except KeyboardInterrupt:
-            # Caso o KeyboardInterrupt ocorra fora do with (segurança extra)
-            self.log("Busca interrompida pelo usuário (Ctrl+C).", code=10)
-            return
+            # Final status
+            progress.update(task, status=f" {len(found_files)}")
+            time.sleep(0.3)
 
         except Exception as e:
-            self.log(f"Erro inesperado: {e}", code=9)
-            return
+            self.log(f"Error: {e}", code=9)
 
-        return arquivos_encontrados
-
-
-    def barra_carregamento_simples_callback(self, callback_busca):
-        """
-        Versão mais simples da barra com callback
-        """
-        arquivos_encontrados = []
-
-        with Progress(
-            SpinnerColumn(style="accent"),
-            TextColumn("[accent bold]Descobrindo arquivos...[/accent bold]"),
-            TextColumn("[primary]{task.fields[status]}[/primary]"),
-            console=self.console,
-        ) as progress:
-
-            task = progress.add_task("", status=" 0")
-
-            try:
-                for arquivo, total in callback_busca():
-                    arquivos_encontrados.append(arquivo)
-
-                    # Atualiza a cada 10 arquivos para melhor performance
-                    if total % 10 == 0:
-                        progress.update(task, status=f" {total}")
-
-                # Status final
-                progress.update(task, status=f" {len(arquivos_encontrados)}")
-                time.sleep(0.3)
-
-            except Exception as e:
-                self.log(f"Erro: {e}", code=9)
-
-        return arquivos_encontrados
+    return found_files
 
 
-    def barra_carregamento_avancada_callback(self, callback_busca, titulo="Carregando"):
-        """
-        Versão mais avançada que permite customizar o título
-        """
-        arquivos_encontrados = []
+def advanced_loading_bar_callback(self, callback_search, title="Loading"):
+    """
+    More advanced version that allows custom title.
+    """
+    found_files = []
 
-        with Progress(
-            SpinnerColumn(style="accent", spinner_name="dots"),
-            TextColumn(f"[accent]{titulo}[/accent]"),
-            TextColumn("[primary]{task.fields[contador]}[/primary]"),
-            TextColumn("[muted]{task.fields[info]}[/muted]"),
-            TimeElapsedColumn(),
-            console=self.console,
-        ) as progress:
+    with Progress(
+        SpinnerColumn(style="accent", spinner_name="dots"),
+        TextColumn(f"[accent]{title}[/accent]"),
+        TextColumn("[primary]{task.fields[counter]}[/primary]"),
+        TextColumn("[muted]{task.fields[info]}[/muted]"),
+        TimeElapsedColumn(),
+        console=self.console,
+    ) as progress:
 
-            task = progress.add_task(
-                "",
-                contador="0",
-                info="Iniciando..."
-            )
+        task = progress.add_task(
+            "",
+            counter="0",
+            info="Starting..."
+        )
 
-            start_time = time.time()
+        start_time = time.time()
 
-            try:
-                for resultado in callback_busca():
-                    # Callback pode retornar tupla (arquivo, total) ou (arquivo, total, info_extra)
-                    if len(resultado) == 2:
-                        arquivo, total = resultado
-                    else:
-                        arquivo, total, info_extra = resultado
+        try:
+            for result in callback_search():
+                # Callback can return tuple (file, total) or (file, total, extra_info)
+                if len(result) == 2:
+                    file, total = result
+                else:
+                    file, total, extra_info = result
 
-                    arquivos_encontrados.append(arquivo)
+                found_files.append(file)
 
-                    elapsed = time.time() - start_time
-                    progress.update(
-                        task,
-                        contador=f"{total}",
-                        info=f"{elapsed:.1f}s"
-                    )
+                elapsed = time.time() - start_time
+                progress.update(
+                    task,
+                    counter=f"{total}",
+                    info=f"{elapsed:.1f}s"
+                )
 
-            except Exception as e:
-                progress.update(task, info=self.log(f"Erro: {str(e)[:30]}...", code=9))
+        except Exception as e:
+            progress.update(task, info=self.log(f"Error: {str(e)[:30]}...", code=9))
 
-        return arquivos_encontrados 
+    return found_files

@@ -1,6 +1,6 @@
 [project]
 name = "ryzor"
-version = "0.2.5"
+version = "0.2.9"
 description = "CLI para organização de arquivos"
 authors = [{ name = "Lucas Paulino Da Silva", email = "lucas.workps@gmail.com" }]
 dependencies = ["rich", "pyfiglet", "send2trash"]
