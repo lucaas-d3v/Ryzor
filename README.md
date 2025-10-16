@@ -29,7 +29,6 @@ pip install .
 
 Check available commands:
 ```bash
-ryzor --help
 ryzor help
 ```
 
@@ -37,7 +36,7 @@ ryzor help
 
 ## Installation (detailed)
 
-### Via pip (recommended)
+### pip (recommended)
 ```bash
 git clone https://github.com/lucaas-d3v/Ryzor
 cd Ryzor
@@ -174,8 +173,7 @@ Simple structure mapping types to extensions:
 ---
 
 ## License
-This repository **does not yet have a license**.  
-It is recommended to add a permissive license (MIT/Apache-2.0) before public release.
+This repository **does not yet have a license**.
 
 ---
 
